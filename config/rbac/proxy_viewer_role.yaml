@@ -1,0 +1,20 @@
+# permissions for end users to view proxies.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: proxy-viewer-role
+rules:
+- apiGroups:
+  - ktunnels.int128.github.io
+  resources:
+  - proxies
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ktunnels.int128.github.io
+  resources:
+  - proxies/status
+  verbs:
+  - get
