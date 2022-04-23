@@ -1,0 +1,6 @@
+domain: int128.github.io
+layout:
+- go.kubebuilder.io/v3
+projectName: ktunnels
+repo: github.com/int128/ktunnels
+version: "3"
