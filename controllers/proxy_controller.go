@@ -72,23 +72,58 @@ func (r *ProxyReconciler) reconcileEnvoyConfigMap(ctx context.Context, proxy ktu
 			return fmt.Errorf("unable to get the proxy: %w", err)
 		}
 
-		log.Info("creating ConfigMap", "name", cmName)
+		log.Info("Creating ConfigMap", "ConfigMap", cmName)
 		cm.Namespace = cmName.Namespace
 		cm.Name = cmName.Name
-		cm.Data["cds.yaml"] = generateCDS(proxy)
-		cm.Data["lds.yaml"] = generateLDS(proxy)
+		cm.Data = generateEnvoyConfigMapData(proxy)
+		if err := ctrl.SetControllerReference(&proxy, &cm, r.Scheme); err != nil {
+			return fmt.Errorf("unable to set a controller reference: %w", err)
+		}
 		if err := r.Create(ctx, &cm); err != nil {
 			return fmt.Errorf("unable to create the proxy: %w", err)
 		}
+		return nil
 	}
 
-	log.Info("updating ConfigMap", "name", cmName)
-	cm.Data["cds.yaml"] = generateCDS(proxy)
-	cm.Data["lds.yaml"] = generateLDS(proxy)
+	log.Info("Updating ConfigMap", "ConfigMap", cmName)
+	cm.Data = generateEnvoyConfigMapData(proxy)
+	if err := ctrl.SetControllerReference(&proxy, &cm, r.Scheme); err != nil {
+		return fmt.Errorf("unable to set a controller reference: %w", err)
+	}
 	if err := r.Update(ctx, &cm); err != nil {
 		return fmt.Errorf("unable to update the proxy: %w", err)
 	}
 	return nil
+}
+
+func generateEnvoyConfigMapData(proxy ktunnelsv1.Proxy) map[string]string {
+	return map[string]string{
+		"bootstrap.yaml": generateBootstrap(),
+		"cds.yaml":       generateCDS(proxy),
+		"lds.yaml":       generateLDS(proxy),
+	}
+}
+
+func generateBootstrap() string {
+	return `# bootstrap.yaml
+node:
+  cluster: test-cluster
+  id: test-id
+
+dynamic_resources:
+  cds_config:
+    resource_api_version: V3
+    path_config_source:
+      path: /etc/envoy/cds.yaml
+      watched_directory:
+        path: /etc/envoy
+  lds_config:
+    resource_api_version: V3
+    path_config_source:
+      path: /etc/envoy/lds.yaml
+      watched_directory:
+        path: /etc/envoy
+`
 }
 
 func generateCDS(proxy ktunnelsv1.Proxy) string {
@@ -98,7 +133,7 @@ resources:
 `)
 	for i, tunnel := range proxy.Spec.Tunnels {
 		sb.WriteString(fmt.Sprintf(`
-- "@type": type.googleapis.com/envoy.config.cluster.v3.Cluster
+  - "@type": type.googleapis.com/envoy.config.cluster.v3.Cluster
     name: cluster_0
     connect_timeout: 30s
     type: LOGICAL_DNS
@@ -112,7 +147,7 @@ resources:
                   socket_address:
                     address: %s
                     port_value: %d
-`, i, tunnel.Name, tunnel.Port))
+`, i, tunnel.Host, tunnel.Port))
 	}
 	return sb.String()
 }

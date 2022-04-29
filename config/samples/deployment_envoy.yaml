@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-envoy
+spec:
+  selector:
+    matchLabels:
+      ktunnels.int128.github.io/envoy: example
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        ktunnels.int128.github.io/envoy: example
+    spec:
+      containers:
+        - name: envoy
+          args:
+            - -c
+            - /etc/envoy/bootstrap.yaml
+          image: envoyproxy/envoy:v1.22-latest
+          resources:
+            limits:
+              memory: 32Mi
+            requests:
+              cpu: 10m
+              memory: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - mountPath: /etc/envoy
+              name: envoy-config
+      volumes:
+        - name: envoy-config
+          configMap:
+            name: example-envoy
+      terminationGracePeriodSeconds: 10
