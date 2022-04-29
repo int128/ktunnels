@@ -18,16 +18,14 @@ package controllers
 
 import (
 	"context"
-	appsv1 "k8s.io/api/apps/v1"
+	"fmt"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
-
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	klog "sigs.k8s.io/controller-runtime/pkg/log"
+	"strings"
 
 	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
 )
@@ -42,69 +40,112 @@ type ProxyReconciler struct {
 //+kubebuilder:rbac:groups=ktunnels.int128.github.io,resources=proxies/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=ktunnels.int128.github.io,resources=proxies/finalizers,verbs=update
 
+//+kubebuilder:rbac:groups=,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
+
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 func (r *ProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
-
 	var proxy ktunnelsv1.Proxy
 	if err := r.Get(ctx, req.NamespacedName, &proxy); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-
-	// TODO: add prefix to name
-	var proxyDeployment appsv1.Deployment
-	if err := r.Get(ctx, req.NamespacedName, &proxyDeployment); err != nil {
-		if err := client.IgnoreNotFound(err); err != nil {
-			return ctrl.Result{}, err
-		}
-	}
-
-	proxyDeploymentSpec := appsv1.DeploymentSpec{
-		Replicas: pointer.Int32Ptr(1),
-		Template: corev1.PodTemplateSpec{
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{{
-					Name:  "envoy",
-					Image: "envoyproxy/envoy:v1.23-latest",
-					Args:  []string{"--config-yaml", ``},
-					Resources: corev1.ResourceRequirements{
-						Requests: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse("10m"),
-							corev1.ResourceMemory: resource.MustParse("10Mi"),
-						},
-					},
-				}},
-			},
-		},
-	}
-
-	if proxyDeployment.Name == "" {
-		proxyDeployment = appsv1.Deployment{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: req.Namespace,
-				Name:      req.Name,
-			},
-			Spec: proxyDeploymentSpec,
-		}
-		if err := r.Create(ctx, &proxyDeployment); err != nil {
-			log.Error(err, "unable to create a proxy deployment")
-			return ctrl.Result{}, err
-		}
+	if !proxy.DeletionTimestamp.IsZero() {
 		return ctrl.Result{}, nil
 	}
 
-	proxyDeployment.Spec = proxyDeploymentSpec
-	if err := r.Update(ctx, &proxyDeployment); err != nil {
-		log.Error(err, "unable to update the proxy deployment")
+	if err := r.reconcileEnvoyConfigMap(ctx, proxy); err != nil {
 		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
+}
+
+func (r *ProxyReconciler) reconcileEnvoyConfigMap(ctx context.Context, proxy ktunnelsv1.Proxy) error {
+	log := klog.FromContext(ctx)
+
+	cmName := types.NamespacedName{
+		Namespace: proxy.ObjectMeta.Namespace,
+		Name:      fmt.Sprintf("%s-envoy", proxy.ObjectMeta.Name),
+	}
+	var cm corev1.ConfigMap
+	if err := r.Get(ctx, cmName, &cm); err != nil {
+		if err := client.IgnoreNotFound(err); err != nil {
+			return fmt.Errorf("unable to get the proxy: %w", err)
+		}
+
+		log.Info("creating ConfigMap", "name", cmName)
+		cm.Namespace = cmName.Namespace
+		cm.Name = cmName.Name
+		cm.Data["cds.yaml"] = generateCDS(proxy)
+		cm.Data["lds.yaml"] = generateLDS(proxy)
+		if err := r.Create(ctx, &cm); err != nil {
+			return fmt.Errorf("unable to create the proxy: %w", err)
+		}
+	}
+
+	log.Info("updating ConfigMap", "name", cmName)
+	cm.Data["cds.yaml"] = generateCDS(proxy)
+	cm.Data["lds.yaml"] = generateLDS(proxy)
+	if err := r.Update(ctx, &cm); err != nil {
+		return fmt.Errorf("unable to update the proxy: %w", err)
+	}
+	return nil
+}
+
+func generateCDS(proxy ktunnelsv1.Proxy) string {
+	var sb strings.Builder
+	sb.WriteString(`# cds.yaml
+resources:
+`)
+	for i, tunnel := range proxy.Spec.Tunnels {
+		sb.WriteString(fmt.Sprintf(`
+- "@type": type.googleapis.com/envoy.config.cluster.v3.Cluster
+    name: cluster_0
+    connect_timeout: 30s
+    type: LOGICAL_DNS
+    dns_lookup_family: V4_ONLY
+    load_assignment:
+      cluster_name: cluster_%d
+      endpoints:
+        - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: %s
+                    port_value: %d
+`, i, tunnel.Name, tunnel.Port))
+	}
+	return sb.String()
+}
+
+func generateLDS(proxy ktunnelsv1.Proxy) string {
+	var sb strings.Builder
+	sb.WriteString(`# lds.yaml
+resources:
+`)
+	for i := range proxy.Spec.Tunnels {
+		sb.WriteString(fmt.Sprintf(`
+  - "@type": type.googleapis.com/envoy.config.listener.v3.Listener
+    name: listener_%d
+    address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: %d
+    filter_chains:
+      - filters:
+          - name: envoy.filters.network.tcp_proxy
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.network.tcp_proxy.v3.TcpProxy
+              stat_prefix: destination
+              cluster: cluster_%d
+`, i, 10000+i, i))
+	}
+	return sb.String()
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *ProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&ktunnelsv1.Proxy{}).
+		Owns(&corev1.ConfigMap{}).
 		Complete(r)
 }

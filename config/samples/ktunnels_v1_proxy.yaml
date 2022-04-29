@@ -3,4 +3,7 @@ kind: Proxy
 metadata:
   name: proxy-sample
 spec:
-  # TODO(user): Add fields here
+  tunnels:
+    - name: example
+      host: example.com
+      port: 80
