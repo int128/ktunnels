@@ -22,13 +22,16 @@ import (
 
 // ProxySpec defines the desired state of Proxy
 type ProxySpec struct {
-	Tunnels []ProxyTunnel `json:"tunnels,omitempty"`
+	Tunnels []*ProxyTunnel `json:"tunnels,omitempty"`
 }
 
 type ProxyTunnel struct {
 	Name string `json:"name,omitempty"`
 	Host string `json:"host,omitempty"`
 	Port int32  `json:"port,omitempty"`
+
+	// +optional
+	TransitPort int32 `json:"transitPort,omitempty"`
 }
 
 // ProxyStatus defines the observed state of Proxy

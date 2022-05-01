@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: example-envoy
+spec:
+  selector:
+    ktunnels.int128.github.io/envoy: example
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 10000

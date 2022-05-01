@@ -89,8 +89,14 @@ func (in *ProxySpec) DeepCopyInto(out *ProxySpec) {
 	*out = *in
 	if in.Tunnels != nil {
 		in, out := &in.Tunnels, &out.Tunnels
-		*out = make([]ProxyTunnel, len(*in))
-		copy(*out, *in)
+		*out = make([]*ProxyTunnel, len(*in))
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(ProxyTunnel)
+				**out = **in
+			}
+		}
 	}
 }
 

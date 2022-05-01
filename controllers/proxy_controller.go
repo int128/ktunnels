@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/int128/ktunnels/pkg/tunnel"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -53,10 +54,30 @@ func (r *ProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, nil
 	}
 
+	if err := r.reconcileProxy(ctx, proxy); err != nil {
+		return ctrl.Result{}, err
+	}
 	if err := r.reconcileEnvoyConfigMap(ctx, proxy); err != nil {
 		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
+}
+
+func (r *ProxyReconciler) reconcileProxy(ctx context.Context, proxy ktunnelsv1.Proxy) error {
+	log := klog.FromContext(ctx)
+
+	changed, err := tunnel.FillTransitPort(proxy.Spec.Tunnels)
+	if err != nil {
+		return fmt.Errorf("reconcile proxy: %w", err)
+	}
+	if !changed {
+		return nil
+	}
+	log.Info("Updating Proxy")
+	if err := r.Update(ctx, &proxy); err != nil {
+		return fmt.Errorf("unable to update Proxy: %w", err)
+	}
+	return nil
 }
 
 func (r *ProxyReconciler) reconcileEnvoyConfigMap(ctx context.Context, proxy ktunnelsv1.Proxy) error {
@@ -131,10 +152,10 @@ func generateCDS(proxy ktunnelsv1.Proxy) string {
 	sb.WriteString(`# cds.yaml
 resources:
 `)
-	for i, tunnel := range proxy.Spec.Tunnels {
+	for _, t := range proxy.Spec.Tunnels {
 		sb.WriteString(fmt.Sprintf(`
   - "@type": type.googleapis.com/envoy.config.cluster.v3.Cluster
-    name: cluster_0
+    name: cluster_%d
     connect_timeout: 30s
     type: LOGICAL_DNS
     dns_lookup_family: V4_ONLY
@@ -147,7 +168,7 @@ resources:
                   socket_address:
                     address: %s
                     port_value: %d
-`, i, tunnel.Host, tunnel.Port))
+`, t.TransitPort, t.TransitPort, t.Host, t.Port))
 	}
 	return sb.String()
 }
@@ -157,7 +178,7 @@ func generateLDS(proxy ktunnelsv1.Proxy) string {
 	sb.WriteString(`# lds.yaml
 resources:
 `)
-	for i := range proxy.Spec.Tunnels {
+	for _, t := range proxy.Spec.Tunnels {
 		sb.WriteString(fmt.Sprintf(`
   - "@type": type.googleapis.com/envoy.config.listener.v3.Listener
     name: listener_%d
@@ -172,7 +193,7 @@ resources:
               "@type": type.googleapis.com/envoy.extensions.filters.network.tcp_proxy.v3.TcpProxy
               stat_prefix: destination
               cluster: cluster_%d
-`, i, 10000+i, i))
+`, t.TransitPort, t.TransitPort, t.TransitPort))
 	}
 	return sb.String()
 }
