@@ -20,16 +20,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // TunnelSpec defines the desired state of Tunnel
 type TunnelSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Host string `json:"host,omitempty"`
+	Port int32  `json:"port,omitempty"`
 
-	// Foo is an example field of Tunnel. Edit tunnel_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	ProxyNameRef string `json:"proxyNameRef,omitempty"`
+
+	// +optional
+	TransitPort *int32 `json:"transitPort,omitempty"`
 }
 
 // TunnelStatus defines the observed state of Tunnel

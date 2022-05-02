@@ -1,9 +1,5 @@
 apiVersion: ktunnels.int128.github.io/v1
 kind: Proxy
 metadata:
-  name: example
+  name: default
 spec:
-  tunnels:
-    - name: example
-      host: example.com
-      port: 80

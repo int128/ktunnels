@@ -1,6 +1,8 @@
 apiVersion: ktunnels.int128.github.io/v1
 kind: Tunnel
 metadata:
-  name: tunnel-sample
+  name: payment-db
 spec:
-  # TODO(user): Add fields here
+  proxyNameRef: default
+  host: www.example.com
+  port: 80

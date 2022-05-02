@@ -5,20 +5,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
-  name: proxies.ktunnels.int128.github.io
+  name: tunnels.ktunnels.int128.github.io
 spec:
   group: ktunnels.int128.github.io
   names:
-    kind: Proxy
-    listKind: ProxyList
-    plural: proxies
-    singular: proxy
+    kind: Tunnel
+    listKind: TunnelList
+    plural: tunnels
+    singular: tunnel
   scope: Namespaced
   versions:
   - name: v1
     schema:
       openAPIV3Schema:
-        description: Proxy is the Schema for the proxies API
+        description: Tunnel is the Schema for the tunnels API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -33,10 +33,21 @@ spec:
           metadata:
             type: object
           spec:
-            description: ProxySpec defines the desired state of Proxy
+            description: TunnelSpec defines the desired state of Tunnel
+            properties:
+              host:
+                type: string
+              port:
+                format: int32
+                type: integer
+              proxyNameRef:
+                type: string
+              transitPort:
+                format: int32
+                type: integer
             type: object
           status:
-            description: ProxyStatus defines the observed state of Proxy
+            description: TunnelStatus defines the observed state of Tunnel
             type: object
         type: object
     served: true

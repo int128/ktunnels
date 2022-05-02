@@ -18,13 +18,13 @@ package controllers
 
 import (
 	"context"
-
+	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
+	klog "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // TunnelReconciler reconciles a Tunnel object
@@ -39,19 +39,44 @@ type TunnelReconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the Tunnel object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
 func (r *TunnelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log := klog.FromContext(ctx)
 
-	// TODO(user): your logic here
-
+	var tunnel ktunnelsv1.Tunnel
+	if err := r.Get(ctx, req.NamespacedName, &tunnel); err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+	if err := r.reconcileControllerReference(ctx, tunnel); err != nil {
+		log.Error(err, "Unable to reconcile the controller reference")
+		return ctrl.Result{}, err
+	}
+	if tunnel.Spec.TransitPort == nil {
+		log.Info("Transit port is not yet allocated")
+		return ctrl.Result{}, nil
+	}
 	return ctrl.Result{}, nil
+}
+
+func (r *TunnelReconciler) reconcileControllerReference(ctx context.Context, tunnel ktunnelsv1.Tunnel) error {
+	log := klog.FromContext(ctx)
+
+	if metav1.GetControllerOf(&tunnel) != nil {
+		return nil
+	}
+
+	var proxy ktunnelsv1.Proxy
+	if err := r.Get(ctx, types.NamespacedName{Namespace: tunnel.Namespace, Name: tunnel.Spec.ProxyNameRef}, &proxy); err != nil {
+		return client.IgnoreNotFound(err)
+	}
+	log.Info("Updating controller reference", "tunnel", tunnel.Name, "proxy", proxy.Name)
+	if err := ctrl.SetControllerReference(&proxy, &tunnel, r.Scheme); err != nil {
+		return err
+	}
+	if err := r.Update(ctx, &tunnel); err != nil {
+		return err
+	}
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
