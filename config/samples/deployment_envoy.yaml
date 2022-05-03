@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: example-envoy
+  name: default-envoy
 spec:
   selector:
     matchLabels:
-      ktunnels.int128.github.io/envoy: example
+      ktunnels.int128.github.io/envoy: default
   replicas: 1
   template:
     metadata:
       labels:
-        ktunnels.int128.github.io/envoy: example
+        ktunnels.int128.github.io/envoy: default
     spec:
       containers:
         - name: envoy
@@ -32,5 +32,5 @@ spec:
       volumes:
         - name: envoy-config
           configMap:
-            name: example-envoy
+            name: default-envoy
       terminationGracePeriodSeconds: 10

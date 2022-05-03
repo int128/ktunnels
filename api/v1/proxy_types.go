@@ -22,6 +22,12 @@ import (
 
 // ProxySpec defines the desired state of Proxy
 type ProxySpec struct {
+	TransitPortAllocation []*ProxyTransitPortAllocation `json:"transitPortAllocation,omitempty"`
+}
+
+type ProxyTransitPortAllocation struct {
+	TunnelNameRef string `json:"tunnelNameRef,omitempty"`
+	TransitPort   int32  `json:"transitPort,omitempty"`
 }
 
 // ProxyStatus defines the observed state of Proxy

@@ -34,6 +34,17 @@ spec:
             type: object
           spec:
             description: ProxySpec defines the desired state of Proxy
+            properties:
+              transitPortAllocation:
+                items:
+                  properties:
+                    transitPort:
+                      format: int32
+                      type: integer
+                    tunnelNameRef:
+                      type: string
+                  type: object
+                type: array
             type: object
           status:
             description: ProxyStatus defines the observed state of Proxy

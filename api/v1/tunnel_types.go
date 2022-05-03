@@ -26,9 +26,6 @@ type TunnelSpec struct {
 	Port int32  `json:"port,omitempty"`
 
 	ProxyNameRef string `json:"proxyNameRef,omitempty"`
-
-	// +optional
-	TransitPort *int32 `json:"transitPort,omitempty"`
 }
 
 // TunnelStatus defines the observed state of Tunnel
