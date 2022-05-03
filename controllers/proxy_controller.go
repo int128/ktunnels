@@ -54,6 +54,7 @@ func (r *ProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	var proxy ktunnelsv1.Proxy
 	if err := r.Get(ctx, req.NamespacedName, &proxy); err != nil {
+		log.Error(err, "unable to get the proxy")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	if !proxy.DeletionTimestamp.IsZero() {
@@ -65,9 +66,10 @@ func (r *ProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		client.InNamespace(proxy.ObjectMeta.Namespace),
 		client.MatchingFields{proxyNameRefKey: proxy.Name},
 	); err != nil {
-		log.Error(err, "unable to list tunnels")
+		log.Error(err, "unable to list tunnels", "proxy", proxy.Name)
 		return ctrl.Result{}, err
 	}
+	log.Info("listed referenced tunnels", "count", len(tunnelList.Items))
 
 	if err := r.reconcileTunnels(ctx, proxy, tunnelList); err != nil {
 		log.Error(err, "unable to reconcile tunnels")
@@ -101,18 +103,21 @@ func (r *ProxyReconciler) reconcileTunnels(ctx context.Context, proxy ktunnelsv1
 		portMap[p] = tunnel.Name
 	}
 
+	log.Info("allocating ports of tunnels", "count", len(needToReconcile))
 	for _, tunnel := range needToReconcile {
 		tunnel := tunnel
 		p, err := findPort(portMap, rand.NewSource(proxy.Generation))
 		if err != nil {
-			return fmt.Errorf("unable to allocate transit port for tunnel %s: %w", tunnel.Name, err)
+			log.Error(err, "unable to allocate transit port for tunnel")
+			return err
 		}
-		log.Info("Updating transit port of tunnel", "tunnel", tunnel.Name, "transitPort", p)
 		tunnel.Spec.TransitPort = &p
 		if err := r.Update(ctx, &tunnel); err != nil {
-			return fmt.Errorf("unable to update tunnel %s: %w", tunnel.Name, err)
+			log.Error(err, "unable to update the tunnel")
+			return err
 		}
 		portMap[p] = tunnel.Name
+		log.Info("updated transit port of tunnel", "tunnel", tunnel.Name, "transitPort", p)
 	}
 	return nil
 }
@@ -141,7 +146,6 @@ func (r *ProxyReconciler) reconcileEnvoyConfigMap(ctx context.Context, proxy ktu
 			return fmt.Errorf("unable to get the proxy: %w", err)
 		}
 
-		log.Info("Creating envoy ConfigMap", "configMap", cmName)
 		cm.Namespace = cmName.Namespace
 		cm.Name = cmName.Name
 		cm.Data = generateEnvoyConfigMapData(tunnelList)
@@ -149,19 +153,23 @@ func (r *ProxyReconciler) reconcileEnvoyConfigMap(ctx context.Context, proxy ktu
 			return fmt.Errorf("unable to set a controller reference: %w", err)
 		}
 		if err := r.Create(ctx, &cm); err != nil {
-			return fmt.Errorf("unable to create the proxy: %w", err)
+			log.Error(err, "unable to create a ConfigMap", "configMap", cmName)
+			return err
 		}
+		log.Info("created envoy ConfigMap", "configMap", cmName)
 		return nil
 	}
 
-	log.Info("Updating envoy ConfigMap", "configMap", cmName)
 	cm.Data = generateEnvoyConfigMapData(tunnelList)
 	if err := ctrl.SetControllerReference(&proxy, &cm, r.Scheme); err != nil {
-		return fmt.Errorf("unable to set a controller reference: %w", err)
+		log.Error(err, "unable to set a controller reference to proxy")
+		return err
 	}
 	if err := r.Update(ctx, &cm); err != nil {
-		return fmt.Errorf("unable to update the proxy: %w", err)
+		log.Error(err, "unable to update the ConfigMap", "configMap", cmName)
+		return err
 	}
+	log.Info("updated envoy ConfigMap", "configMap", cmName)
 	return nil
 }
 
