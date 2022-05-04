@@ -1,0 +1,6 @@
+apiVersion: ktunnels.int128.github.io/v1
+kind: Tunnel
+metadata:
+  name: tunnel-sample
+spec:
+  # TODO(user): Add fields here
