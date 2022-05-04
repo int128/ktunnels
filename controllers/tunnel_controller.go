@@ -18,17 +18,16 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
 	corev1 "k8s.io/api/core/v1"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"math/rand"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	klog "sigs.k8s.io/controller-runtime/pkg/log"
-	"time"
 )
 
 // TunnelReconciler reconciles a Tunnel object
@@ -58,70 +57,26 @@ func (r *TunnelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	proxyKey := types.NamespacedName{Namespace: tunnel.Namespace, Name: tunnel.Spec.ProxyNameRef}
 	var proxy ktunnelsv1.Proxy
 	if err := r.Get(ctx, proxyKey, &proxy); err != nil {
-		if err := client.IgnoreNotFound(err); err != nil {
-			log.Error(err, "unable to get the proxy for tunnel", "proxy", proxyKey.Name)
-			return ctrl.Result{}, err
-		}
-		log.Error(err, "invalid proxyNameRef", "proxy", proxyKey.Name)
-		serviceKey := types.NamespacedName{Namespace: tunnel.Namespace, Name: tunnel.Name}
-		return ctrl.Result{}, r.deleteService(ctx, serviceKey)
-	}
-
-	if err := r.reconcileTunnel(ctx, tunnel, proxy); err != nil {
+		log.Error(err, "unable to get the proxy for tunnel", "proxy", proxyKey.Name)
 		return ctrl.Result{}, err
 	}
+
 	if err := r.reconcileService(ctx, tunnel); err != nil {
 		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
 }
 
-func (r *TunnelReconciler) reconcileTunnel(ctx context.Context, tunnel ktunnelsv1.Tunnel, proxy ktunnelsv1.Proxy) error {
-	log := klog.FromContext(ctx)
-
-	if tunnel.Spec.TransitPort != nil {
-		log.Info("transit port is already allocated; nothing to reconcile the tunnel")
-		return nil
-	}
-
-	var tunnelList ktunnelsv1.TunnelList
-	if err := r.List(ctx, &tunnelList,
-		client.InNamespace(proxy.Namespace),
-		client.MatchingFields{proxyNameRefKey: proxy.Name},
-	); err != nil {
-		log.Error(err, "unable to list tunnels", "proxy", proxy.Name)
-		return err
-	}
-	log.Info("listed referenced tunnels", "count", len(tunnelList.Items))
-
-	transitPort, err := findAvailableTransitPort(tunnelList)
-	if err != nil {
-		log.Error(err, "unable to find a transit port")
-		return err
-	}
-
-	proxy.Spec.LastAllocatedTransitPort = &transitPort
-	if err := r.Update(ctx, &proxy); err != nil {
-		log.Error(err, "unable to acquire a lock to update the tunnel")
-		return err
-	}
-
-	tunnel.Spec.TransitPort = &transitPort
-	if err := r.Update(ctx, &tunnel); err != nil {
-		log.Error(err, "unable to update the tunnel")
-		return err
-	}
-	return nil
-}
-
 func (r *TunnelReconciler) reconcileService(ctx context.Context, tunnel ktunnelsv1.Tunnel) error {
 	serviceKey := types.NamespacedName{Namespace: tunnel.Namespace, Name: tunnel.Name}
-	log := klog.FromContext(ctx, "service", serviceKey.Name)
-
 	if tunnel.Spec.TransitPort == nil {
-		serviceKey := types.NamespacedName{Namespace: tunnel.Namespace, Name: tunnel.Name}
 		return r.deleteService(ctx, serviceKey)
 	}
+	return r.createOrUpdateService(ctx, tunnel, serviceKey)
+}
+
+func (r *TunnelReconciler) createOrUpdateService(ctx context.Context, tunnel ktunnelsv1.Tunnel, serviceKey types.NamespacedName) error {
+	log := klog.FromContext(ctx, "service", serviceKey.Name)
 
 	servicePorts := []corev1.ServicePort{{
 		Name:       "envoy",
@@ -132,24 +87,30 @@ func (r *TunnelReconciler) reconcileService(ctx context.Context, tunnel ktunnels
 
 	var svc corev1.Service
 	if err := r.Get(ctx, serviceKey, &svc); err != nil {
-		if err := client.IgnoreNotFound(err); err != nil {
-			log.Error(err, "unable to get the service", "service", serviceKey)
+		if !kerrors.IsNotFound(err) {
+			log.Error(err, "unable to get the service")
 			return err
 		}
 
-		svc.Namespace = serviceKey.Namespace
-		svc.Name = serviceKey.Name
-		svc.Spec.Ports = servicePorts
-		svc.Spec.Selector = serviceSelector
+		svc := corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: serviceKey.Namespace,
+				Name:      serviceKey.Name,
+			},
+			Spec: corev1.ServiceSpec{
+				Ports:    servicePorts,
+				Selector: serviceSelector,
+			},
+		}
 		if err := ctrl.SetControllerReference(&tunnel, &svc, r.Scheme); err != nil {
-			log.Error(err, "unable to set a controller reference to service", "service", serviceKey)
+			log.Error(err, "unable to set a controller reference to service")
 			return err
 		}
 		if err := r.Create(ctx, &svc); err != nil {
-			log.Error(err, "unable to create a service", "service", serviceKey)
+			log.Error(err, "unable to create a service")
 			return err
 		}
-		log.Info("created service", "service", serviceKey)
+		log.Info("created a service")
 		return nil
 	}
 
@@ -163,38 +124,17 @@ func (r *TunnelReconciler) reconcileService(ctx context.Context, tunnel ktunnels
 		log.Error(err, "unable to update the service", "service", serviceKey)
 		return err
 	}
-	log.Info("updated service", "service", serviceKey)
+	log.Info("updated the service", "service", serviceKey)
 	return nil
-}
-
-func findAvailableTransitPort(tunnelList ktunnelsv1.TunnelList) (int32, error) {
-	portMap := make(map[int32]string)
-	for _, item := range tunnelList.Items {
-		if item.Spec.TransitPort == nil {
-			continue
-		}
-		portMap[*item.Spec.TransitPort] = item.Name
-	}
-
-	r := rand.New(rand.NewSource(time.Now().Unix()))
-	for i := 0; i < 20000; i++ {
-		p := int32(10000 + r.Intn(20000))
-		if _, exists := portMap[p]; !exists {
-			return p, nil
-		}
-	}
-	return 0, fmt.Errorf("no available port")
 }
 
 func (r *TunnelReconciler) deleteService(ctx context.Context, key types.NamespacedName) error {
 	log := klog.FromContext(ctx, "service", key.Name)
 	var svc corev1.Service
 	if err := r.Get(ctx, key, &svc); err != nil {
-		log.Error(err, "unable to get the service")
 		return client.IgnoreNotFound(err)
 	}
 	if err := r.Delete(ctx, &svc); err != nil {
-		log.Error(err, "unable to delete the service")
 		return client.IgnoreNotFound(err)
 	}
 	log.Info("deleted the service")

@@ -19,15 +19,19 @@ package controllers
 import (
 	"context"
 	"fmt"
+	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"math/rand"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	klog "sigs.k8s.io/controller-runtime/pkg/log"
-	"strings"
-
-	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
+	"time"
 )
 
 const (
@@ -70,11 +74,74 @@ func (r *ProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 	log.Info("listed referenced tunnels", "count", len(tunnelList.Items))
 
+	if err := r.reconcileTunnels(ctx, tunnelList, proxy); err != nil {
+		log.Error(err, "unable to reconcile tunnels")
+		return ctrl.Result{}, err
+	}
 	if err := r.reconcileConfigMap(ctx, proxy, tunnelList); err != nil {
-		log.Error(err, "unable to reconcile ConfigMap for Envoy")
+		log.Error(err, "unable to reconcile config map")
 		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
+}
+
+func (r *ProxyReconciler) reconcileTunnels(ctx context.Context, tunnelList ktunnelsv1.TunnelList, proxy ktunnelsv1.Proxy) error {
+	log := klog.FromContext(ctx)
+
+	allocatedTunnels := allocateTransitPort(tunnelList)
+	if len(allocatedTunnels) == 0 {
+		log.Info("all tunnels are consistently allocated")
+		return nil
+	}
+
+	for _, tunnel := range allocatedTunnels {
+		if err := r.Update(ctx, tunnel); err != nil {
+			log.Error(err, "unable to update the tunnel")
+			return err
+		}
+		log.Info("updated the tunnel", "tunnel", tunnel.Name)
+	}
+	if err := r.Update(ctx, &proxy); err != nil {
+		log.Error(err, "unable to acquire an optimistic lock to update the tunnels", "proxy", proxy.Name)
+		return err
+	}
+	log.Info("successfully updated the tunnels consistently", "proxy", proxy.Name)
+	return nil
+}
+
+func allocateTransitPort(tunnelList ktunnelsv1.TunnelList) []*ktunnelsv1.Tunnel {
+	var needToReconcile []*ktunnelsv1.Tunnel
+	var portMap = make(map[int32]string)
+	for _, item := range tunnelList.Items {
+		item := item
+		// not allocated
+		if item.Spec.TransitPort == nil {
+			needToReconcile = append(needToReconcile, &item)
+			continue
+		}
+		// dedupe
+		if _, exists := portMap[*item.Spec.TransitPort]; exists {
+			needToReconcile = append(needToReconcile, &item)
+			continue
+		}
+		portMap[*item.Spec.TransitPort] = item.Name
+	}
+
+	for _, item := range needToReconcile {
+		item.Spec.TransitPort = findPort(portMap)
+	}
+	return needToReconcile
+}
+
+func findPort(portMap map[int32]string) *int32 {
+	r := rand.New(rand.NewSource(time.Now().Unix()))
+	for i := 0; i < 20000; i++ {
+		p := int32(10000 + r.Intn(20000))
+		if _, exists := portMap[p]; !exists {
+			return &p
+		}
+	}
+	return nil
 }
 
 func (r *ProxyReconciler) reconcileConfigMap(ctx context.Context, proxy ktunnelsv1.Proxy, tunnelList ktunnelsv1.TunnelList) error {
@@ -90,18 +157,22 @@ func (r *ProxyReconciler) reconcileConfigMap(ctx context.Context, proxy ktunnels
 			return fmt.Errorf("unable to get the proxy: %w", err)
 		}
 
-		cm.Namespace = cmKey.Namespace
-		cm.Name = cmKey.Name
-		cm.Data = generateEnvoyConfigMapData(tunnelList)
+		cm := corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: cmKey.Namespace,
+				Name:      cmKey.Name,
+			},
+			Data: generateEnvoyConfigMapData(tunnelList),
+		}
 		if err := ctrl.SetControllerReference(&proxy, &cm, r.Scheme); err != nil {
 			log.Error(err, "unable to set a controller reference to proxy")
 			return err
 		}
 		if err := r.Create(ctx, &cm); err != nil {
-			log.Error(err, "unable to create a ConfigMap")
+			log.Error(err, "unable to create a config map")
 			return err
 		}
-		log.Info("created a ConfigMap for Envoy")
+		log.Info("created a config map")
 		return nil
 	}
 
@@ -111,111 +182,11 @@ func (r *ProxyReconciler) reconcileConfigMap(ctx context.Context, proxy ktunnels
 		return err
 	}
 	if err := r.Update(ctx, &cm); err != nil {
-		log.Error(err, "unable to update the ConfigMap")
+		log.Error(err, "unable to update the config map")
 		return err
 	}
-	log.Info("updated the ConfigMap for Envoy")
+	log.Info("updated the config map")
 	return nil
-}
-
-func generateEnvoyConfigMapData(tunnelList ktunnelsv1.TunnelList) map[string]string {
-	return map[string]string{
-		"bootstrap.yaml": generateBootstrap(),
-		"cds.yaml":       generateCDS(tunnelList),
-		"lds.yaml":       generateLDS(tunnelList),
-	}
-}
-
-func generateBootstrap() string {
-	return `# bootstrap.yaml
-node:
-  cluster: test-cluster
-  id: test-id
-
-dynamic_resources:
-  cds_config:
-    resource_api_version: V3
-    path_config_source:
-      path: /etc/envoy/cds.yaml
-      watched_directory:
-        path: /etc/envoy
-  lds_config:
-    resource_api_version: V3
-    path_config_source:
-      path: /etc/envoy/lds.yaml
-      watched_directory:
-        path: /etc/envoy
-`
-}
-
-func generateCDS(tunnelList ktunnelsv1.TunnelList) string {
-	var sb strings.Builder
-	sb.WriteString(`# cds.yaml
-resources:
-`)
-	for _, item := range tunnelList.Items {
-		if item.Spec.TransitPort == nil {
-			continue
-		}
-		transitPort := *item.Spec.TransitPort
-
-		sb.WriteString(fmt.Sprintf(`
-  - "@type": type.googleapis.com/envoy.config.cluster.v3.Cluster
-    name: cluster_%d
-    connect_timeout: 30s
-    type: LOGICAL_DNS
-    dns_lookup_family: V4_ONLY
-    load_assignment:
-      cluster_name: cluster_%d
-      endpoints:
-        - lb_endpoints:
-            - endpoint:
-                address:
-                  socket_address:
-                    address: %s
-                    port_value: %d
-`,
-			transitPort,
-			transitPort,
-			item.Spec.Host,
-			item.Spec.Port,
-		))
-	}
-	return sb.String()
-}
-
-func generateLDS(tunnelList ktunnelsv1.TunnelList) string {
-	var sb strings.Builder
-	sb.WriteString(`# lds.yaml
-resources:
-`)
-	for _, item := range tunnelList.Items {
-		if item.Spec.TransitPort == nil {
-			continue
-		}
-		transitPort := *item.Spec.TransitPort
-
-		sb.WriteString(fmt.Sprintf(`
-  - "@type": type.googleapis.com/envoy.config.listener.v3.Listener
-    name: listener_%d
-    address:
-      socket_address:
-        address: 0.0.0.0
-        port_value: %d
-    filter_chains:
-      - filters:
-          - name: envoy.filters.network.tcp_proxy
-            typed_config:
-              "@type": type.googleapis.com/envoy.extensions.filters.network.tcp_proxy.v3.TcpProxy
-              stat_prefix: destination
-              cluster: cluster_%d
-`,
-			transitPort,
-			transitPort,
-			transitPort,
-		))
-	}
-	return sb.String()
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -237,5 +208,22 @@ func (r *ProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&ktunnelsv1.Proxy{}).
 		Owns(&corev1.ConfigMap{}).
+		Watches(
+			&source.Kind{Type: &ktunnelsv1.Tunnel{}},
+			handler.EnqueueRequestsFromMapFunc(r.findObjectsForTunnel),
+		).
 		Complete(r)
+}
+
+func (r *ProxyReconciler) findObjectsForTunnel(obj client.Object) []reconcile.Request {
+	tunnel, ok := obj.(*ktunnelsv1.Tunnel)
+	if !ok {
+		return nil
+	}
+	return []reconcile.Request{{
+		NamespacedName: types.NamespacedName{
+			Namespace: tunnel.Namespace,
+			Name:      tunnel.Spec.ProxyNameRef,
+		},
+	}}
 }

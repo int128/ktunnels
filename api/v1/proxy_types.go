@@ -22,8 +22,6 @@ import (
 
 // ProxySpec defines the desired state of Proxy
 type ProxySpec struct {
-	//+optional
-	LastAllocatedTransitPort *int32 `json:"lastAllocatedTransitPort,omitempty"`
 }
 
 // ProxyStatus defines the observed state of Proxy
