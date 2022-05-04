@@ -1,8 +1,16 @@
 apiVersion: ktunnels.int128.github.io/v1
-kind: Tunnel
-metadata:
-  name: payment-db
-spec:
-  proxyNameRef: default
-  host: www.example.com
-  port: 80
+kind: TunnelList
+items:
+  - metadata:
+      name: main-db
+    spec:
+      host: www.example.com
+      port: 80
+      proxyNameRef: default
+
+  - metadata:
+      name: payment-db
+    spec:
+      host: httpbin.org
+      port: 80
+      proxyNameRef: default

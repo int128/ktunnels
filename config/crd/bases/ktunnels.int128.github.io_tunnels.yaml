@@ -42,6 +42,9 @@ spec:
                 type: integer
               proxyNameRef:
                 type: string
+              transitPort:
+                format: int32
+                type: integer
             type: object
           status:
             description: TunnelStatus defines the observed state of Tunnel
