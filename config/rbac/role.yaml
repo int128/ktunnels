@@ -15,6 +15,16 @@ rules:
   - patch
   - update
   - watch
+- resources:
+  - services
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - ktunnels.int128.github.io
   resources:
