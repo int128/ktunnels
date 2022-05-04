@@ -27,7 +27,7 @@ type TunnelSpec struct {
 
 	ProxyNameRef string `json:"proxyNameRef,omitempty"`
 
-	//+optional
+	// +optional
 	TransitPort *int32 `json:"transitPort,omitempty"`
 }
 
