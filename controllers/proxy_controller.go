@@ -73,37 +73,38 @@ func (r *ProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	//TODO: dedupe transit port allocations
 	//TODO: clean up transit port allocations
 
-	if err := r.reconcileEnvoyConfigMap(ctx, proxy, tunnelList); err != nil {
-		log.Error(err, "unable to reconcile envoy ConfigMap")
+	if err := r.reconcileConfigMap(ctx, proxy, tunnelList); err != nil {
+		log.Error(err, "unable to reconcile ConfigMap for Envoy")
 		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
 }
 
-func (r *ProxyReconciler) reconcileEnvoyConfigMap(ctx context.Context, proxy ktunnelsv1.Proxy, tunnelList ktunnelsv1.TunnelList) error {
-	log := klog.FromContext(ctx)
-
-	cmName := types.NamespacedName{
-		Namespace: proxy.ObjectMeta.Namespace,
-		Name:      fmt.Sprintf("%s-envoy", proxy.ObjectMeta.Name),
+func (r *ProxyReconciler) reconcileConfigMap(ctx context.Context, proxy ktunnelsv1.Proxy, tunnelList ktunnelsv1.TunnelList) error {
+	cmKey := types.NamespacedName{
+		Namespace: proxy.Namespace,
+		Name:      fmt.Sprintf("%s-envoy", proxy.Name),
 	}
+	log := klog.FromContext(ctx, "configMap", cmKey)
+
 	var cm corev1.ConfigMap
-	if err := r.Get(ctx, cmName, &cm); err != nil {
+	if err := r.Get(ctx, cmKey, &cm); err != nil {
 		if err := client.IgnoreNotFound(err); err != nil {
 			return fmt.Errorf("unable to get the proxy: %w", err)
 		}
 
-		cm.Namespace = cmName.Namespace
-		cm.Name = cmName.Name
+		cm.Namespace = cmKey.Namespace
+		cm.Name = cmKey.Name
 		cm.Data = generateEnvoyConfigMapData(proxy, tunnelList)
 		if err := ctrl.SetControllerReference(&proxy, &cm, r.Scheme); err != nil {
-			return fmt.Errorf("unable to set a controller reference: %w", err)
-		}
-		if err := r.Create(ctx, &cm); err != nil {
-			log.Error(err, "unable to create a ConfigMap", "configMap", cmName)
+			log.Error(err, "unable to set a controller reference to proxy")
 			return err
 		}
-		log.Info("created envoy ConfigMap", "configMap", cmName)
+		if err := r.Create(ctx, &cm); err != nil {
+			log.Error(err, "unable to create a ConfigMap")
+			return err
+		}
+		log.Info("created a ConfigMap for Envoy")
 		return nil
 	}
 
@@ -113,10 +114,10 @@ func (r *ProxyReconciler) reconcileEnvoyConfigMap(ctx context.Context, proxy ktu
 		return err
 	}
 	if err := r.Update(ctx, &cm); err != nil {
-		log.Error(err, "unable to update the ConfigMap", "configMap", cmName)
+		log.Error(err, "unable to update the ConfigMap")
 		return err
 	}
-	log.Info("updated envoy ConfigMap", "configMap", cmName)
+	log.Info("updated the ConfigMap for Envoy")
 	return nil
 }
 
