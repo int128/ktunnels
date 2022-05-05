@@ -15,7 +15,17 @@ spec:
     singular: tunnel
   scope: Namespaced
   versions:
-  - name: v1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.host
+      name: Host
+      type: string
+    - jsonPath: .spec.port
+      name: Port
+      type: integer
+    - jsonPath: .spec.proxyNameRef
+      name: Proxy
+      type: string
+    name: v1
     schema:
       openAPIV3Schema:
         description: Tunnel is the Schema for the tunnels API
