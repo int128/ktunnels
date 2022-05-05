@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/int128/ktunnels/pkg/envoy"
+	"github.com/int128/ktunnels/pkg/transit"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -75,32 +76,50 @@ func (r *ProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, err
 	}
 	log.Info("fetched referenced tunnels", "tunnels", len(tunnelList.Items))
-	if err := r.reconcileTunnels(ctx, tunnelList, proxy); err != nil {
-		return ctrl.Result{}, err
+
+	mutableTunnels := make([]*ktunnelsv1.Tunnel, len(tunnelList.Items))
+	for i := range tunnelList.Items {
+		mutableTunnels[i] = &tunnelList.Items[i]
 	}
 
-	if err := r.reconcileConfigMap(ctx, proxy, tunnelList); err != nil {
+	if err := r.reconcileTunnels(ctx, mutableTunnels); err != nil {
 		return ctrl.Result{}, err
 	}
+	log.Info("successfully reconciled the tunnels")
+
+	if err := r.reconcileConfigMap(ctx, proxy, mutableTunnels); err != nil {
+		return ctrl.Result{}, err
+	}
+	log.Info("successfully reconciled the config map")
 	return ctrl.Result{}, nil
 }
 
-func (r *ProxyReconciler) reconcileTunnels(ctx context.Context, _ ktunnelsv1.TunnelList, _ ktunnelsv1.Proxy) error {
-	_ = crlog.FromContext(ctx)
+func (r *ProxyReconciler) reconcileTunnels(ctx context.Context, mutableTunnels []*ktunnelsv1.Tunnel) error {
+	log := crlog.FromContext(ctx)
 
-	//TODO
-
+	allocatedTunnels := transit.AllocatePort(mutableTunnels)
+	if len(allocatedTunnels) == 0 {
+		log.Info("all tunnels are already allocated")
+		return nil
+	}
+	for _, tunnel := range allocatedTunnels {
+		if err := r.Update(ctx, tunnel); err != nil {
+			log.Error(err, "unable to update the tunnel", "tunnel", tunnel.Name)
+			return err
+		}
+		log.Info("updated the tunnel", "tunnel", tunnel.Name)
+	}
 	return nil
 }
 
-func (r *ProxyReconciler) reconcileConfigMap(ctx context.Context, proxy ktunnelsv1.Proxy, tunnelList ktunnelsv1.TunnelList) error {
+func (r *ProxyReconciler) reconcileConfigMap(ctx context.Context, proxy ktunnelsv1.Proxy, mutableTunnels []*ktunnelsv1.Tunnel) error {
 	cmKey := types.NamespacedName{Namespace: proxy.Namespace, Name: fmt.Sprintf("ktunnels-proxy-%s", proxy.Name)}
 	log := crlog.FromContext(ctx, "configMap", cmKey)
 
 	var cm corev1.ConfigMap
 	if err := r.Get(ctx, cmKey, &cm); err != nil {
 		if apierrors.IsNotFound(err) {
-			cm := envoy.NewConfigMap(cmKey, tunnelList)
+			cm := envoy.NewConfigMap(cmKey, mutableTunnels)
 			if err := ctrl.SetControllerReference(&proxy, &cm, r.Scheme); err != nil {
 				log.Error(err, "unable to set a controller reference")
 				return err
@@ -117,7 +136,7 @@ func (r *ProxyReconciler) reconcileConfigMap(ctx context.Context, proxy ktunnels
 		return err
 	}
 
-	cmTemplate := envoy.NewConfigMap(cmKey, tunnelList)
+	cmTemplate := envoy.NewConfigMap(cmKey, mutableTunnels)
 	cm.Data = cmTemplate.Data
 	if err := ctrl.SetControllerReference(&proxy, &cm, r.Scheme); err != nil {
 		log.Error(err, "unable to set a controller reference")
