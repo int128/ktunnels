@@ -1,4 +1,4 @@
-package tunnels
+package transit
 
 import (
 	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
@@ -6,10 +6,10 @@ import (
 	"time"
 )
 
-// AllocateTransitPort allocates nil transit port(s) to available port(s).
+// AllocatePort updates nil transit port(s) to available port(s).
 // It returns the items which has been changed.
 // Given array will be changed.
-func AllocateTransitPort(mutableTunnels []*ktunnelsv1.Tunnel) []*ktunnelsv1.Tunnel {
+func AllocatePort(mutableTunnels []*ktunnelsv1.Tunnel) []*ktunnelsv1.Tunnel {
 	var needToReconcile []*ktunnelsv1.Tunnel
 	var portSet = make(map[int32]struct{})
 

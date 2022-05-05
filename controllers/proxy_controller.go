@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/int128/ktunnels/pkg/envoy"
-	"github.com/int128/ktunnels/pkg/tunnels"
+	"github.com/int128/ktunnels/pkg/transit"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -97,7 +97,7 @@ func (r *ProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 func (r *ProxyReconciler) reconcileTunnels(ctx context.Context, mutableTunnels []*ktunnelsv1.Tunnel) error {
 	log := crlog.FromContext(ctx)
 
-	allocatedTunnels := tunnels.AllocateTransitPort(mutableTunnels)
+	allocatedTunnels := transit.AllocatePort(mutableTunnels)
 	if len(allocatedTunnels) == 0 {
 		log.Info("all tunnels are already allocated")
 		return nil
