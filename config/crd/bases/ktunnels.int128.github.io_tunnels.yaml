@@ -35,10 +35,21 @@ spec:
           spec:
             description: TunnelSpec defines the desired state of Tunnel
             properties:
-              foo:
-                description: Foo is an example field of Tunnel. Edit tunnel_types.go
-                  to remove/update
+              host:
+                description: Destination hostname of this tunnel.
                 type: string
+              port:
+                description: Destination port of this tunnel.
+                format: int32
+                type: integer
+              proxyNameRef:
+                description: Name of proxy resource to register.
+                type: string
+              transitPort:
+                description: Transit port of the proxy. This value is automatically
+                  set by proxy controller. Do not set this manually.
+                format: int32
+                type: integer
             type: object
           status:
             description: TunnelStatus defines the observed state of Tunnel
