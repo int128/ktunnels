@@ -6,6 +6,16 @@ metadata:
   name: manager-role
 rules:
 - resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- resources:
   - services
   verbs:
   - create
