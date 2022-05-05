@@ -10,21 +10,21 @@ import (
 	"strings"
 )
 
-func NewConfigMap(key types.NamespacedName, tunnelList ktunnelsv1.TunnelList) corev1.ConfigMap {
+func NewConfigMap(key types.NamespacedName, tunnels []*ktunnelsv1.Tunnel) corev1.ConfigMap {
 	return corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: key.Namespace,
 			Name:      key.Name,
 		},
-		Data: generateConfigMapData(tunnelList),
+		Data: generateConfigMapData(tunnels),
 	}
 }
 
-func generateConfigMapData(tunnelList ktunnelsv1.TunnelList) map[string]string {
+func generateConfigMapData(tunnels []*ktunnelsv1.Tunnel) map[string]string {
 	return map[string]string{
 		"bootstrap.yaml": generateBootstrap(),
-		"cds.yaml":       generateCDS(tunnelList),
-		"lds.yaml":       generateLDS(tunnelList),
+		"cds.yaml":       generateCDS(tunnels),
+		"lds.yaml":       generateLDS(tunnels),
 	}
 }
 
@@ -49,12 +49,12 @@ dynamic_resources:
 `
 }
 
-func generateCDS(tunnelList ktunnelsv1.TunnelList) string {
+func generateCDS(tunnels []*ktunnelsv1.Tunnel) string {
 	var sb strings.Builder
 	sb.WriteString(`# cds.yaml
 resources:
 `)
-	for _, item := range tunnelList.Items {
+	for _, item := range tunnels {
 		if item.Spec.TransitPort == nil {
 			continue
 		}
@@ -83,12 +83,12 @@ resources:
 	return sb.String()
 }
 
-func generateLDS(tunnelList ktunnelsv1.TunnelList) string {
+func generateLDS(tunnels []*ktunnelsv1.Tunnel) string {
 	var sb strings.Builder
 	sb.WriteString(`# lds.yaml
 resources:
 `)
-	for _, item := range tunnelList.Items {
+	for _, item := range tunnels {
 		if item.Spec.TransitPort == nil {
 			continue
 		}
