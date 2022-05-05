@@ -45,6 +45,9 @@ type TunnelStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Host",type=string,JSONPath=`.spec.host`
+// +kubebuilder:printcolumn:name="Port",type=integer,JSONPath=`.spec.port`
+// +kubebuilder:printcolumn:name="Proxy",type=string,JSONPath=`.spec.proxyNameRef`
 
 // Tunnel is the Schema for the tunnels API
 type Tunnel struct {
