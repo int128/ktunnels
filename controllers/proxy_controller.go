@@ -19,9 +19,9 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/int128/ktunnels/pkg/envoy"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -100,7 +100,7 @@ func (r *ProxyReconciler) reconcileConfigMap(ctx context.Context, proxy ktunnels
 	var cm corev1.ConfigMap
 	if err := r.Get(ctx, cmKey, &cm); err != nil {
 		if apierrors.IsNotFound(err) {
-			cm := newProxyConfigMap(cmKey, tunnelList)
+			cm := envoy.NewConfigMap(cmKey, tunnelList)
 			if err := ctrl.SetControllerReference(&proxy, &cm, r.Scheme); err != nil {
 				log.Error(err, "unable to set a controller reference")
 				return err
@@ -117,7 +117,7 @@ func (r *ProxyReconciler) reconcileConfigMap(ctx context.Context, proxy ktunnels
 		return err
 	}
 
-	cmTemplate := newProxyConfigMap(cmKey, tunnelList)
+	cmTemplate := envoy.NewConfigMap(cmKey, tunnelList)
 	cm.Data = cmTemplate.Data
 	if err := ctrl.SetControllerReference(&proxy, &cm, r.Scheme); err != nil {
 		log.Error(err, "unable to set a controller reference")
@@ -129,16 +129,6 @@ func (r *ProxyReconciler) reconcileConfigMap(ctx context.Context, proxy ktunnels
 	}
 	log.Info("updated the config map")
 	return nil
-}
-
-func newProxyConfigMap(key types.NamespacedName, _ ktunnelsv1.TunnelList) corev1.ConfigMap {
-	return corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: key.Namespace,
-			Name:      key.Name,
-		},
-		Data: nil, //TODO: generateEnvoyConfigMapData(tunnelList),
-	}
 }
 
 // SetupWithManager sets up the controller with the Manager.
