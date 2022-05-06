@@ -16,6 +16,16 @@ rules:
   - update
   - watch
 - resources:
+  - deployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- resources:
   - services
   verbs:
   - create
