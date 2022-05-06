@@ -1,6 +1,5 @@
 apiVersion: ktunnels.int128.github.io/v1
 kind: Proxy
 metadata:
-  name: proxy-sample
+  name: default
 spec:
-  # TODO(user): Add fields here

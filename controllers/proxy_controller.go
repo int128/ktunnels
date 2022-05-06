@@ -209,6 +209,7 @@ func (r *ProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&ktunnelsv1.Proxy{}).
 		Owns(&corev1.ConfigMap{}).
+		Owns(&appsv1.Deployment{}).
 		Watches(
 			// watch tunnel(s) of a proxy
 			// https://book.kubebuilder.io/reference/watching-resources/externally-managed.html
