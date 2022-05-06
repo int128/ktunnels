@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/int128/ktunnels/pkg/envoy"
 	"github.com/int128/ktunnels/pkg/transit"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -53,6 +54,7 @@ type ProxyReconciler struct {
 //+kubebuilder:rbac:groups=ktunnels.int128.github.io,resources=proxies/finalizers,verbs=update
 
 //+kubebuilder:rbac:groups=,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -91,6 +93,12 @@ func (r *ProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, err
 	}
 	log.Info("successfully reconciled the config map")
+
+	if err := r.reconcileDeployment(ctx, proxy); err != nil {
+		return ctrl.Result{}, err
+	}
+	log.Info("successfully reconciled the deployment")
+
 	return ctrl.Result{}, nil
 }
 
@@ -147,6 +155,44 @@ func (r *ProxyReconciler) reconcileConfigMap(ctx context.Context, proxy ktunnels
 		return err
 	}
 	log.Info("updated the config map")
+	return nil
+}
+
+func (r *ProxyReconciler) reconcileDeployment(ctx context.Context, proxy ktunnelsv1.Proxy) error {
+	deploymentKey := types.NamespacedName{Namespace: proxy.Namespace, Name: fmt.Sprintf("ktunnels-proxy-%s", proxy.Name)}
+	log := crlog.FromContext(ctx, "deployment", deploymentKey)
+
+	var deployment appsv1.Deployment
+	if err := r.Get(ctx, deploymentKey, &deployment); err != nil {
+		if apierrors.IsNotFound(err) {
+			deployment := envoy.NewDeployment(deploymentKey, proxy)
+			if err := ctrl.SetControllerReference(&proxy, &deployment, r.Scheme); err != nil {
+				log.Error(err, "unable to set a controller reference")
+				return err
+			}
+			if err := r.Create(ctx, &deployment); err != nil {
+				log.Error(err, "unable to create a deployment")
+				return err
+			}
+			log.Info("created a deployment")
+			return nil
+		}
+
+		log.Error(err, "unable to fetch the deployment")
+		return err
+	}
+
+	deploymentTemplate := envoy.NewDeployment(deploymentKey, proxy)
+	deployment.Spec = deploymentTemplate.Spec
+	if err := ctrl.SetControllerReference(&proxy, &deployment, r.Scheme); err != nil {
+		log.Error(err, "unable to set a controller reference")
+		return err
+	}
+	if err := r.Update(ctx, &deployment); err != nil {
+		log.Error(err, "unable to update the deployment")
+		return err
+	}
+	log.Info("updated the deployment")
 	return nil
 }
 

@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"github.com/int128/ktunnels/pkg/envoy"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,10 +30,6 @@ import (
 	crlog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
-)
-
-const (
-	TunnelServiceSelectorKey = "ktunnels.int128.github.io/proxy"
 )
 
 // TunnelReconciler reconciles a Tunnel object
@@ -147,7 +144,7 @@ func newTunnelService(key types.NamespacedName, tunnel ktunnelsv1.Tunnel) corev1
 				},
 			},
 			Selector: map[string]string{
-				TunnelServiceSelectorKey: tunnel.Spec.ProxyNameRef,
+				envoy.PodLabelKeyOfProxy: tunnel.Spec.ProxyNameRef,
 			},
 		},
 	}
