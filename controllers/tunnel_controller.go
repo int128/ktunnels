@@ -57,7 +57,7 @@ func (r *TunnelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return ctrl.Result{}, nil
 	}
 
-	proxyKey := types.NamespacedName{Namespace: tunnel.Namespace, Name: tunnel.Spec.ProxyNameRef}
+	proxyKey := types.NamespacedName{Namespace: tunnel.Namespace, Name: tunnel.Spec.Proxy.Name}
 	var proxy ktunnelsv1.Proxy
 	if err := r.Get(ctx, proxyKey, &proxy); err != nil {
 		// corresponding proxy resource must exist
@@ -144,7 +144,7 @@ func newTunnelService(key types.NamespacedName, tunnel ktunnelsv1.Tunnel) corev1
 				},
 			},
 			Selector: map[string]string{
-				envoy.PodLabelKeyOfProxy: tunnel.Spec.ProxyNameRef,
+				envoy.PodLabelKeyOfProxy: tunnel.Spec.Proxy.Name,
 			},
 		},
 	}

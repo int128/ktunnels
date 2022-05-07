@@ -3,6 +3,7 @@ package transit
 import (
 	"github.com/google/go-cmp/cmp"
 	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/pointer"
 	"testing"
 )
@@ -25,10 +26,10 @@ func Test_allocatePort(t *testing.T) {
 		g := AllocatePort([]*ktunnelsv1.Tunnel{
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:         "foo",
-					Port:         100,
-					ProxyNameRef: "bar",
-					TransitPort:  pointer.Int32Ptr(200),
+					Host:        "foo",
+					Port:        100,
+					Proxy:       corev1.LocalObjectReference{Name: "bar"},
+					TransitPort: pointer.Int32Ptr(200),
 				},
 			},
 		})
@@ -40,18 +41,18 @@ func Test_allocatePort(t *testing.T) {
 		g := AllocatePort([]*ktunnelsv1.Tunnel{
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:         "foo1",
-					Port:         100,
-					ProxyNameRef: "bar1",
-					TransitPort:  pointer.Int32Ptr(1000),
+					Host:        "foo1",
+					Port:        100,
+					Proxy:       corev1.LocalObjectReference{Name: "bar1"},
+					TransitPort: pointer.Int32Ptr(1000),
 				},
 			},
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:         "foo2",
-					Port:         200,
-					ProxyNameRef: "bar2",
-					TransitPort:  pointer.Int32Ptr(2000),
+					Host:        "foo2",
+					Port:        200,
+					Proxy:       corev1.LocalObjectReference{Name: "bar2"},
+					TransitPort: pointer.Int32Ptr(2000),
 				},
 			},
 		})
@@ -65,27 +66,27 @@ func Test_allocatePort(t *testing.T) {
 		g := allocatePort([]*ktunnelsv1.Tunnel{
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:         "foo1",
-					Port:         100,
-					ProxyNameRef: "bar1",
+					Host:  "foo1",
+					Port:  100,
+					Proxy: corev1.LocalObjectReference{Name: "bar1"},
 				},
 			},
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:         "foo2",
-					Port:         200,
-					ProxyNameRef: "bar2",
-					TransitPort:  pointer.Int32Ptr(2000),
+					Host:        "foo2",
+					Port:        200,
+					Proxy:       corev1.LocalObjectReference{Name: "bar2"},
+					TransitPort: pointer.Int32Ptr(2000),
 				},
 			},
 		}, mockIntn)
 		w := []*ktunnelsv1.Tunnel{
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:         "foo1",
-					Port:         100,
-					ProxyNameRef: "bar1",
-					TransitPort:  pointer.Int32Ptr(22345),
+					Host:        "foo1",
+					Port:        100,
+					Proxy:       corev1.LocalObjectReference{Name: "bar1"},
+					TransitPort: pointer.Int32Ptr(22345),
 				},
 			},
 		}
@@ -99,27 +100,27 @@ func Test_allocatePort(t *testing.T) {
 		g := allocatePort([]*ktunnelsv1.Tunnel{
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:         "foo1",
-					Port:         100,
-					ProxyNameRef: "bar1",
-					TransitPort:  pointer.Int32Ptr(1000),
+					Host:        "foo1",
+					Port:        100,
+					Proxy:       corev1.LocalObjectReference{Name: "bar1"},
+					TransitPort: pointer.Int32Ptr(1000),
 				},
 			},
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:         "foo2",
-					Port:         200,
-					ProxyNameRef: "bar2",
+					Host:  "foo2",
+					Port:  200,
+					Proxy: corev1.LocalObjectReference{Name: "bar2"},
 				},
 			},
 		}, mockIntn)
 		w := []*ktunnelsv1.Tunnel{
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:         "foo2",
-					Port:         200,
-					ProxyNameRef: "bar2",
-					TransitPort:  pointer.Int32Ptr(22345),
+					Host:        "foo2",
+					Port:        200,
+					Proxy:       corev1.LocalObjectReference{Name: "bar2"},
+					TransitPort: pointer.Int32Ptr(22345),
 				},
 			},
 		}
@@ -135,34 +136,34 @@ func Test_allocatePort(t *testing.T) {
 		g := allocatePort([]*ktunnelsv1.Tunnel{
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:         "foo1",
-					Port:         100,
-					ProxyNameRef: "bar1",
+					Host:  "foo1",
+					Port:  100,
+					Proxy: corev1.LocalObjectReference{Name: "bar1"},
 				},
 			},
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:         "foo2",
-					Port:         200,
-					ProxyNameRef: "bar2",
+					Host:  "foo2",
+					Port:  200,
+					Proxy: corev1.LocalObjectReference{Name: "bar2"},
 				},
 			},
 		}, mockIntn)
 		w := []*ktunnelsv1.Tunnel{
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:         "foo1",
-					Port:         100,
-					ProxyNameRef: "bar1",
-					TransitPort:  pointer.Int32Ptr(22346),
+					Host:        "foo1",
+					Port:        100,
+					Proxy:       corev1.LocalObjectReference{Name: "bar1"},
+					TransitPort: pointer.Int32Ptr(22346),
 				},
 			},
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:         "foo2",
-					Port:         200,
-					ProxyNameRef: "bar2",
-					TransitPort:  pointer.Int32Ptr(22347),
+					Host:        "foo2",
+					Port:        200,
+					Proxy:       corev1.LocalObjectReference{Name: "bar2"},
+					TransitPort: pointer.Int32Ptr(22347),
 				},
 			},
 		}
