@@ -17,6 +17,7 @@ limitations under the License.
 package v1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,8 +29,8 @@ type TunnelSpec struct {
 	// Destination port of this tunnel.
 	Port int32 `json:"port,omitempty"`
 
-	// Name of proxy resource to register.
-	ProxyNameRef string `json:"proxyNameRef,omitempty"`
+	// Proxy resource to register.
+	Proxy corev1.LocalObjectReference `json:"proxy,omitempty"`
 
 	// Transit port of the proxy.
 	// This value is automatically set by proxy controller. Do not set this manually.
@@ -47,7 +48,7 @@ type TunnelStatus struct {
 //+kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Host",type=string,JSONPath=`.spec.host`
 // +kubebuilder:printcolumn:name="Port",type=integer,JSONPath=`.spec.port`
-// +kubebuilder:printcolumn:name="Proxy",type=string,JSONPath=`.spec.proxyNameRef`
+// +kubebuilder:printcolumn:name="Proxy",type=string,JSONPath=`.spec.proxy.name`
 
 // Tunnel is the Schema for the tunnels API
 type Tunnel struct {

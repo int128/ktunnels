@@ -6,11 +6,13 @@ items:
     spec:
       host: www.example.com
       port: 80
-      proxyNameRef: default
+      proxy:
+        name: default
 
   - metadata:
       name: payment-db
     spec:
       host: httpbin.org
       port: 80
-      proxyNameRef: default
+      proxy:
+        name: default

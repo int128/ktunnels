@@ -45,7 +45,8 @@ metadata:
 spec:
   host: backend-db.staging
   port: 5432
-  proxyNameRef: default
+  proxy:
+    name: default
 ```
 
 Run port-forward on your computer.

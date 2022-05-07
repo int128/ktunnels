@@ -22,7 +22,7 @@ spec:
     - jsonPath: .spec.port
       name: Port
       type: integer
-    - jsonPath: .spec.proxyNameRef
+    - jsonPath: .spec.proxy.name
       name: Proxy
       type: string
     name: v1
@@ -52,9 +52,14 @@ spec:
                 description: Destination port of this tunnel.
                 format: int32
                 type: integer
-              proxyNameRef:
-                description: Name of proxy resource to register.
-                type: string
+              proxy:
+                description: Proxy resource to register.
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
               transitPort:
                 description: Transit port of the proxy. This value is automatically
                   set by proxy controller. Do not set this manually.

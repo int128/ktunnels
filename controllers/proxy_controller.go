@@ -40,7 +40,7 @@ import (
 )
 
 const (
-	proxyNameRefKey = ".spec.proxyNameRef"
+	proxyNameKey = ".spec.proxy.name"
 )
 
 // ProxyReconciler reconciles a Proxy object
@@ -72,7 +72,7 @@ func (r *ProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	var tunnelList ktunnelsv1.TunnelList
 	if err := r.List(ctx, &tunnelList,
 		client.InNamespace(proxy.ObjectMeta.Namespace),
-		client.MatchingFields{proxyNameRefKey: proxy.Name},
+		client.MatchingFields{proxyNameKey: proxy.Name},
 	); err != nil {
 		log.Error(err, "unable to fetch tunnels")
 		return ctrl.Result{}, err
@@ -200,8 +200,8 @@ func (r *ProxyReconciler) reconcileDeployment(ctx context.Context, proxy ktunnel
 func (r *ProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if err := mgr.GetFieldIndexer().IndexField(context.Background(),
 		&ktunnelsv1.Tunnel{},
-		proxyNameRefKey,
-		mapTunnelToProxyNameRef,
+		proxyNameKey,
+		mapTunnelToProxyName,
 	); err != nil {
 		return err
 	}
@@ -220,12 +220,12 @@ func (r *ProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func mapTunnelToProxyNameRef(obj client.Object) []string {
+func mapTunnelToProxyName(obj client.Object) []string {
 	tunnel, ok := obj.(*ktunnelsv1.Tunnel)
 	if !ok {
 		return nil
 	}
-	return []string{tunnel.Spec.ProxyNameRef}
+	return []string{tunnel.Spec.Proxy.Name}
 }
 
 func mapTunnelToReconcileRequest(obj client.Object) []reconcile.Request {
@@ -236,7 +236,7 @@ func mapTunnelToReconcileRequest(obj client.Object) []reconcile.Request {
 	return []reconcile.Request{{
 		NamespacedName: types.NamespacedName{
 			Namespace: tunnel.Namespace,
-			Name:      tunnel.Spec.ProxyNameRef,
+			Name:      tunnel.Spec.Proxy.Name,
 		},
 	}}
 }
