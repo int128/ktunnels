@@ -5,17 +5,9 @@ metadata:
   creationTimestamp: null
   name: manager-role
 rules:
-- resources:
-  - configmaps
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- resources:
+- apiGroups:
+  - apps
+  resources:
   - deployments
   verbs:
   - create
@@ -25,7 +17,21 @@ rules:
   - patch
   - update
   - watch
-- resources:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - services
   verbs:
   - create
