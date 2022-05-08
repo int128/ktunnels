@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -22,39 +21,67 @@ func Test(t *testing.T) {
 	var wg wait.Group
 	wg.StartWithContext(ctx, func(ctx context.Context) {
 		defer cancel()
-		if err := wait.PollUntilWithContext(ctx, 3*time.Second, getContent); err != nil {
-			t.Errorf("get content error: %s", err)
+		if err := runKubectl(ctx, "port-forward", "svc/main-db", "10001:80"); err != nil {
+			t.Errorf("kubectl port-foward error: %s", err)
 		}
 	})
 	wg.StartWithContext(ctx, func(ctx context.Context) {
 		defer cancel()
-		if err := runPortForward(ctx); err != nil {
+		if err := runKubectl(ctx, "port-forward", "svc/payment-db", "10002:80"); err != nil {
 			t.Errorf("kubectl port-foward error: %s", err)
+		}
+	})
+	wg.StartWithContext(ctx, func(ctx context.Context) {
+		defer cancel()
+		if err := wait.PollUntilWithContext(ctx, 2*time.Second, func(ctx context.Context) (bool, error) {
+			if err := get(ctx, "http://localhost:10001"); err != nil {
+				return false, err
+			}
+			return true, nil
+		}); err != nil {
+			t.Errorf("get error: %s", err)
+		}
+		if err := wait.PollUntilWithContext(ctx, 2*time.Second, func(ctx context.Context) (bool, error) {
+			if err := get(ctx, "http://localhost:10002/get"); err != nil {
+				return false, err
+			}
+			return true, nil
+		}); err != nil {
+			t.Errorf("get error: %s", err)
 		}
 	})
 	wg.Wait()
 }
 
-func runPortForward(ctx context.Context) error {
-	c := exec.CommandContext(ctx, "kubectl", "port-forward", "svc/payment-db", "10000:80")
+func runKubectl(ctx context.Context, args ...string) error {
+	c := exec.Command("kubectl", args...)
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
-	if err := c.Run(); err != nil {
-		return fmt.Errorf("kubectl port-forward: %w", err)
+	if err := c.Start(); err != nil {
+		return fmt.Errorf("start: %w", err)
+	}
+	<-ctx.Done()
+	if err := c.Process.Signal(os.Interrupt); err != nil {
+		return fmt.Errorf("send SIGINT: %w", err)
+	}
+	if err := c.Wait(); err != nil {
+		return fmt.Errorf("wait: %w", err)
 	}
 	return nil
 }
 
-func getContent(ctx context.Context) (bool, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:10000/get", nil)
+func get(ctx context.Context, url string) error {
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
-		return false, fmt.Errorf("could not create a request: %w", err)
+		return fmt.Errorf("could not create a request: %w", err)
 	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return false, fmt.Errorf("http error: %w", err)
+		return fmt.Errorf("http error: %w", err)
 	}
 	defer resp.Body.Close()
-	log.Printf("received a response %s", resp.Status)
-	return true, nil
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("status code wants 200 but was %d", resp.StatusCode)
+	}
+	return nil
 }

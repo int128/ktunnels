@@ -17,6 +17,7 @@ deploy:
 	cd controller && kustomize edit set image controller="$(CONTROLLER_IMAGE)"
 	kustomize build controller | kubectl apply -f -
 	kubectl -n ktunnels-system rollout status deployment ktunnels-controller-manager
+	kubectl -n ktunnels-system get deployment
 	kubectl apply -f ../config/samples
 	kubectl get proxy
 	kubectl get tunnel
