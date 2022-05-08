@@ -21,26 +21,12 @@ func Test(t *testing.T) {
 	var wg wait.Group
 	wg.StartWithContext(ctx, func(ctx context.Context) {
 		defer cancel()
-		if err := runKubectl(ctx, "port-forward", "svc/main-db", "10001:80"); err != nil {
-			t.Errorf("kubectl port-foward error: %s", err)
-		}
-	})
-	wg.StartWithContext(ctx, func(ctx context.Context) {
-		defer cancel()
 		if err := runKubectl(ctx, "port-forward", "svc/payment-db", "10002:80"); err != nil {
 			t.Errorf("kubectl port-foward error: %s", err)
 		}
 	})
 	wg.StartWithContext(ctx, func(ctx context.Context) {
 		defer cancel()
-		if err := wait.PollUntilWithContext(ctx, 2*time.Second, func(ctx context.Context) (bool, error) {
-			if err := get(ctx, "http://localhost:10001"); err != nil {
-				return false, err
-			}
-			return true, nil
-		}); err != nil {
-			t.Errorf("get error: %s", err)
-		}
 		if err := wait.PollUntilWithContext(ctx, 2*time.Second, func(ctx context.Context) (bool, error) {
 			if err := get(ctx, "http://localhost:10002/get"); err != nil {
 				return false, err
