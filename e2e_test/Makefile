@@ -19,12 +19,15 @@ deploy:
 	kubectl -n ktunnels-system rollout status deployment ktunnels-controller-manager
 	kubectl apply -f ../config/samples
 	kubectl get proxy
-	kubectl get tunnels
+	kubectl get tunnel
 
 test:
 	kubectl rollout status deployment ktunnels-proxy-default
 	kubectl get proxy
-	kubectl get tunnels
+	kubectl get tunnel
+	kubectl get deployment
+	kubectl get service
+	KTUNNELS_E2E_TEST=1 go test -v
 
 logs-controller:
 	-kubectl -n ktunnels-system logs -l control-plane=controller-manager --all-containers --tail=-1
