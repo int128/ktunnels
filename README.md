@@ -10,6 +10,8 @@ If a database is running in a **private network** and outside of a cluster, such
 This allows you to connect from your computer to a host outside of a cluster.
 You just run `kubectl port-forward` and set up your application to connect to localhost.
 
+![diagram](docs/diagram.svg)
+
 This solution is an alternative of SSH or SOCKS bastion.
 You no longer maintain your bastion servers.
 
