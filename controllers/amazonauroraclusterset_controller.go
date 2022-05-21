@@ -18,11 +18,13 @@ package controllers
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	crlog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
 )
@@ -30,7 +32,8 @@ import (
 // AmazonAuroraClusterSetReconciler reconciles a AmazonAuroraClusterSet object
 type AmazonAuroraClusterSetReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme    *runtime.Scheme
+	rdsClient *rds.Client
 }
 
 //+kubebuilder:rbac:groups=ktunnels.int128.github.io,resources=amazonauroraclustersets,verbs=get;list;watch;create;update;patch;delete
@@ -47,9 +50,18 @@ type AmazonAuroraClusterSetReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
 func (r *AmazonAuroraClusterSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log := crlog.FromContext(ctx)
 
 	// TODO(user): your logic here
+
+	if r.rdsClient == nil {
+		cfg, err := config.LoadDefaultConfig(ctx)
+		if err != nil {
+			log.Error(err, "unable to initialize AWS client")
+			return ctrl.Result{}, err
+		}
+		r.rdsClient = rds.NewFromConfig(cfg)
+	}
 
 	return ctrl.Result{}, nil
 }
