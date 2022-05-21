@@ -44,6 +44,32 @@ rules:
 - apiGroups:
   - ktunnels.int128.github.io
   resources:
+  - amazonauroraclustersets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ktunnels.int128.github.io
+  resources:
+  - amazonauroraclustersets/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - ktunnels.int128.github.io
+  resources:
+  - amazonauroraclustersets/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ktunnels.int128.github.io
+  resources:
   - proxies
   verbs:
   - create

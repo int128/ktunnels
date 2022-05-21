@@ -17,19 +17,24 @@ limitations under the License.
 package v1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // AmazonAuroraClusterSetSpec defines the desired state of AmazonAuroraClusterSet
 type AmazonAuroraClusterSetSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Filters to specify one or more DB clusters to describe.
+	Filters []AmazonAuroraClusterFilter `json:"filters,omitempty"`
 
-	// Foo is an example field of AmazonAuroraClusterSet. Edit amazonauroraclusterset_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// Proxy resource to register.
+	Proxy corev1.LocalObjectReference `json:"proxy,omitempty"`
+}
+
+// AmazonAuroraClusterFilter specifies one or more DB clusters to describe.
+// https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBClusters.html
+type AmazonAuroraClusterFilter struct {
+	Name   string   `json:"name,omitempty"`
+	Values []string `json:"values,omitempty"`
 }
 
 // AmazonAuroraClusterSetStatus defines the observed state of AmazonAuroraClusterSet
