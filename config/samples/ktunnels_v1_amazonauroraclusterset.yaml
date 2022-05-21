@@ -1,0 +1,6 @@
+apiVersion: ktunnels.int128.github.io/v1
+kind: AmazonAuroraClusterSet
+metadata:
+  name: amazonauroraclusterset-sample
+spec:
+  # TODO(user): Add fields here
