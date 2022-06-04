@@ -19,6 +19,7 @@ func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy) appsv1.Depl
 			Name:      key.Name,
 		},
 		Spec: appsv1.DeploymentSpec{
+			Replicas: proxy.Spec.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					PodLabelKeyOfProxy: proxy.Name,
@@ -31,7 +32,6 @@ func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy) appsv1.Depl
 					},
 				},
 				Spec: corev1.PodSpec{
-					TerminationGracePeriodSeconds: pointer.Int64Ptr(10),
 					Containers: []corev1.Container{
 						{
 							Name:  "envoy",
@@ -70,6 +70,9 @@ func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy) appsv1.Depl
 							},
 						},
 					},
+					Affinity:         proxy.Spec.PodSpec.Affinity,
+					Tolerations:      proxy.Spec.PodSpec.Tolerations,
+					ImagePullSecrets: proxy.Spec.PodSpec.ImagePullSecrets,
 				},
 			},
 		},
