@@ -9,7 +9,7 @@ require (
 	k8s.io/api v0.23.0
 	k8s.io/apimachinery v0.23.0
 	k8s.io/client-go v0.23.0
-	k8s.io/utils v0.0.0-20210930125809-cb0fa318a74b
+	k8s.io/utils v0.0.0-20220706174534-f6158b442e7c
 	sigs.k8s.io/controller-runtime v0.11.0
 )
 
