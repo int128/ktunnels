@@ -31,7 +31,6 @@ func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy) appsv1.Depl
 					},
 				},
 				Spec: corev1.PodSpec{
-					TerminationGracePeriodSeconds: pointer.Int64Ptr(10),
 					Containers: []corev1.Container{
 						{
 							Name:  "envoy",
