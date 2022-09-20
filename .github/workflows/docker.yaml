@@ -64,15 +64,13 @@ jobs:
 
       - run: make -C e2e_test cluster
 
-      # wait for controller image
       - uses: docker/metadata-action@v4
         id: metadata
         with:
           images: ghcr.io/${{ github.repository }}
-          flavor: latest=false # get single tag
-      - run: bash e2e_test/wait-for-image-available.sh
-        env:
-          CONTROLLER_IMAGE: ${{ steps.metadata.outputs.tags }}
+      - uses: int128/wait-for-docker-image-action@v1
+        with:
+          tags: ${{ steps.metadata.outputs.tags }}
 
       - run: make -C e2e_test deploy
         env:
