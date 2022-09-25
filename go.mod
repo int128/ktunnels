@@ -4,11 +4,11 @@ go 1.19
 
 require (
 	github.com/google/go-cmp v0.5.9
-	github.com/onsi/ginkgo/v2 v2.1.4
-	github.com/onsi/gomega v1.19.0
-	k8s.io/api v0.25.0
-	k8s.io/apimachinery v0.25.0
-	k8s.io/client-go v0.25.0
+	github.com/onsi/ginkgo/v2 v2.1.6
+	github.com/onsi/gomega v1.20.1
+	k8s.io/api v0.25.2
+	k8s.io/apimachinery v0.25.2
+	k8s.io/client-go v0.25.2
 	k8s.io/utils v0.0.0-20220922133306-665eaaec4324
 	sigs.k8s.io/controller-runtime v0.13.0
 )
