@@ -17,11 +17,23 @@ limitations under the License.
 package v1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ProxySpec defines the desired state of Proxy
 type ProxySpec struct {
+	// +optional
+	Replicas *int32 `json:"replicas,omitempty"`
+
+	// +optional
+	PodSpec ProxyPodSpec `json:"podSpec,omitempty"`
+}
+
+// ProxyPodSpec defines the desired state of Pod of Proxy
+type ProxyPodSpec struct {
+	// +optional
+	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 }
 
 // ProxyStatus defines the observed state of Proxy

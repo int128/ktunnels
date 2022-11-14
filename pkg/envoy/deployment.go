@@ -19,6 +19,7 @@ func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy) appsv1.Depl
 			Name:      key.Name,
 		},
 		Spec: appsv1.DeploymentSpec{
+			Replicas: proxy.Spec.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					PodLabelKeyOfProxy: proxy.Name,
@@ -46,7 +47,7 @@ func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy) appsv1.Depl
 								},
 							},
 							SecurityContext: &corev1.SecurityContext{
-								AllowPrivilegeEscalation: pointer.BoolPtr(false),
+								AllowPrivilegeEscalation: pointer.Bool(false),
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								{
@@ -69,6 +70,7 @@ func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy) appsv1.Depl
 							},
 						},
 					},
+					ImagePullSecrets: proxy.Spec.PodSpec.ImagePullSecrets,
 				},
 			},
 		},
