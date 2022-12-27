@@ -42,8 +42,6 @@ var (
 	//cfg *rest.Config
 	k8sClient client.Client
 	testEnv   *envtest.Environment
-	ctx       context.Context
-	cancel    context.CancelFunc
 )
 
 func TestAPIs(t *testing.T) {
@@ -54,7 +52,12 @@ func TestAPIs(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
-	ctx, cancel = context.WithCancel(context.TODO())
+	ctx, cancel := context.WithCancel(context.TODO())
+	DeferCleanup(func() {
+		cancel()
+		By("tearing down the test environment")
+		Expect(testEnv.Stop()).Should(Succeed())
+	})
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
@@ -97,11 +100,4 @@ var _ = BeforeSuite(func() {
 		err = k8sManager.Start(ctx)
 		Expect(err).ToNot(HaveOccurred(), "failed to run manager")
 	}()
-})
-
-var _ = AfterSuite(func() {
-	cancel()
-	By("tearing down the test environment")
-	err := testEnv.Stop()
-	Expect(err).NotTo(HaveOccurred())
 })
