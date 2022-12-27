@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+
 	"github.com/int128/ktunnels/pkg/envoy"
 	"github.com/int128/ktunnels/pkg/transit"
 	appsv1 "k8s.io/api/apps/v1"
@@ -127,7 +128,11 @@ func (r *ProxyReconciler) reconcileConfigMap(ctx context.Context, proxy ktunnels
 	var cm corev1.ConfigMap
 	if err := r.Get(ctx, cmKey, &cm); err != nil {
 		if apierrors.IsNotFound(err) {
-			cm := envoy.NewConfigMap(cmKey, mutableTunnels)
+			cm, err := envoy.NewConfigMap(cmKey, mutableTunnels)
+			if err != nil {
+				log.Error(err, "unable to generate a config map")
+				return err
+			}
 			if err := ctrl.SetControllerReference(&proxy, &cm, r.Scheme); err != nil {
 				log.Error(err, "unable to set a controller reference")
 				return err
@@ -144,7 +149,11 @@ func (r *ProxyReconciler) reconcileConfigMap(ctx context.Context, proxy ktunnels
 		return err
 	}
 
-	cmTemplate := envoy.NewConfigMap(cmKey, mutableTunnels)
+	cmTemplate, err := envoy.NewConfigMap(cmKey, mutableTunnels)
+	if err != nil {
+		log.Error(err, "unable to generate a config map")
+		return err
+	}
 	cm.Data = cmTemplate.Data
 	if err := ctrl.SetControllerReference(&proxy, &cm, r.Scheme); err != nil {
 		log.Error(err, "unable to set a controller reference")

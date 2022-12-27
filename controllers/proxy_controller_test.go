@@ -52,7 +52,7 @@ var _ = Describe("Proxy controller", func() {
 				},
 			}))
 			Expect(deployment.Spec.Template.Spec.Containers).Should(HaveLen(1))
-			Expect(deployment.Spec.Template.Spec.Containers[0].Args).Should(Equal([]string{"-c", "/etc/envoy/bootstrap.yaml"}))
+			Expect(deployment.Spec.Template.Spec.Containers[0].Args).Should(Equal([]string{"-c", "/etc/envoy/bootstrap.json"}))
 			Expect(deployment.Spec.Template.Spec.Containers[0].Image).Should(Equal("envoyproxy/envoy:v1.22-latest"))
 			Expect(deployment.Spec.Template.Spec.Containers[0].VolumeMounts).Should(ContainElement(corev1.VolumeMount{
 				Name:      "envoy-config",
@@ -68,7 +68,7 @@ var _ = Describe("Proxy controller", func() {
 				}, &cm)
 			}).Should(Succeed())
 
-			Expect(cm.Data).Should(HaveKey("bootstrap.yaml"))
+			Expect(cm.Data).Should(HaveKey("bootstrap.json"))
 			Expect(cm.Data).Should(HaveKey("cds.yaml"))
 			Expect(cm.Data).Should(HaveKey("lds.yaml"))
 

@@ -2,51 +2,79 @@ package envoy
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
+	bootstrapv3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
+	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
+	"google.golang.org/protobuf/encoding/protojson"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"strconv"
-	"strings"
 )
 
-func NewConfigMap(key types.NamespacedName, tunnels []*ktunnelsv1.Tunnel) corev1.ConfigMap {
+func NewConfigMap(key types.NamespacedName, tunnels []*ktunnelsv1.Tunnel) (corev1.ConfigMap, error) {
+	data, err := generateConfigMapData(tunnels)
+	if err != nil {
+		return corev1.ConfigMap{}, fmt.Errorf("unable to generate an envoy config: %w", err)
+	}
 	return corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: key.Namespace,
 			Name:      key.Name,
 		},
-		Data: generateConfigMapData(tunnels),
-	}
+		Data: data,
+	}, nil
 }
 
-func generateConfigMapData(tunnels []*ktunnelsv1.Tunnel) map[string]string {
+func generateConfigMapData(tunnels []*ktunnelsv1.Tunnel) (map[string]string, error) {
+	bootstrap, err := generateBootstrap()
+	if err != nil {
+		return nil, fmt.Errorf("unable to generate bootstrap: %w", err)
+	}
 	return map[string]string{
-		"bootstrap.yaml": generateBootstrap(),
+		"bootstrap.json": bootstrap,
 		"cds.yaml":       generateCDS(tunnels),
 		"lds.yaml":       generateLDS(tunnels),
-	}
+	}, nil
 }
 
-func generateBootstrap() string {
-	return `# bootstrap.yaml
-node:
-  cluster: test-cluster
-  id: test-id
-dynamic_resources:
-  cds_config:
-    resource_api_version: V3
-    path_config_source:
-      path: /etc/envoy/cds.yaml
-      watched_directory:
-        path: /etc/envoy
-  lds_config:
-    resource_api_version: V3
-    path_config_source:
-      path: /etc/envoy/lds.yaml
-      watched_directory:
-        path: /etc/envoy
-`
+func generateBootstrap() (string, error) {
+	b, err := protojson.Marshal(&bootstrapv3.Bootstrap{
+		Node: &corev3.Node{
+			Cluster: "test-cluster",
+			Id:      "test-id",
+		},
+		DynamicResources: &bootstrapv3.Bootstrap_DynamicResources{
+			CdsConfig: &corev3.ConfigSource{
+				ResourceApiVersion: corev3.ApiVersion_V3,
+				ConfigSourceSpecifier: &corev3.ConfigSource_PathConfigSource{
+					PathConfigSource: &corev3.PathConfigSource{
+						Path: "/etc/envoy/cds.yaml",
+						WatchedDirectory: &corev3.WatchedDirectory{
+							Path: "/etc/envoy",
+						},
+					},
+				},
+			},
+			LdsConfig: &corev3.ConfigSource{
+				ResourceApiVersion: corev3.ApiVersion_V3,
+				ConfigSourceSpecifier: &corev3.ConfigSource_PathConfigSource{
+					PathConfigSource: &corev3.PathConfigSource{
+						Path: "/etc/envoy/lds.yaml",
+						WatchedDirectory: &corev3.WatchedDirectory{
+							Path: "/etc/envoy",
+						},
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		return "", fmt.Errorf("marshal: %w", err)
+	}
+	return string(b), nil
 }
 
 func generateCDS(tunnels []*ktunnelsv1.Tunnel) string {
