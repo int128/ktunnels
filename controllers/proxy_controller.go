@@ -95,11 +95,18 @@ func (r *ProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 	log.Info("successfully reconciled the config map")
 
-	if err := r.reconcileDeployment(ctx, proxy); err != nil {
+	deployment, err := r.reconcileDeployment(ctx, proxy)
+	if err != nil {
 		return ctrl.Result{}, err
 	}
 	log.Info("successfully reconciled the deployment")
 
+	proxy.Status.Ready = deployment.Status.Replicas == deployment.Status.ReadyReplicas
+	if err := r.Status().Update(ctx, &proxy); err != nil {
+		log.Error(err, "unable to update the proxy status")
+		return ctrl.Result{}, err
+	}
+	log.Info("successfully reconciled the the proxy status")
 	return ctrl.Result{}, nil
 }
 
@@ -167,7 +174,7 @@ func (r *ProxyReconciler) reconcileConfigMap(ctx context.Context, proxy ktunnels
 	return nil
 }
 
-func (r *ProxyReconciler) reconcileDeployment(ctx context.Context, proxy ktunnelsv1.Proxy) error {
+func (r *ProxyReconciler) reconcileDeployment(ctx context.Context, proxy ktunnelsv1.Proxy) (*appsv1.Deployment, error) {
 	deploymentKey := types.NamespacedName{Namespace: proxy.Namespace, Name: fmt.Sprintf("ktunnels-proxy-%s", proxy.Name)}
 	log := crlog.FromContext(ctx, "deployment", deploymentKey)
 
@@ -177,39 +184,32 @@ func (r *ProxyReconciler) reconcileDeployment(ctx context.Context, proxy ktunnel
 			deployment := envoy.NewDeployment(deploymentKey, proxy)
 			if err := ctrl.SetControllerReference(&proxy, &deployment, r.Scheme); err != nil {
 				log.Error(err, "unable to set a controller reference")
-				return err
+				return nil, err
 			}
 			if err := r.Create(ctx, &deployment); err != nil {
 				log.Error(err, "unable to create a deployment")
-				return err
+				return nil, err
 			}
 			log.Info("created a deployment")
-			return nil
+			return &deployment, nil
 		}
 
 		log.Error(err, "unable to fetch the deployment")
-		return err
+		return nil, err
 	}
 
 	deploymentTemplate := envoy.NewDeployment(deploymentKey, proxy)
 	deployment.Spec = deploymentTemplate.Spec
 	if err := ctrl.SetControllerReference(&proxy, &deployment, r.Scheme); err != nil {
 		log.Error(err, "unable to set a controller reference")
-		return err
+		return nil, err
 	}
 	if err := r.Update(ctx, &deployment); err != nil {
 		log.Error(err, "unable to update the deployment")
-		return err
+		return nil, err
 	}
 	log.Info("updated the deployment")
-
-	proxy.Status.Ready = deployment.Status.Replicas == deployment.Status.ReadyReplicas
-	if err := r.Status().Update(ctx, &proxy); err != nil {
-		log.Error(err, "unable to update the proxy status")
-		return err
-	}
-	log.Info("updated the proxy status")
-	return nil
+	return &deployment, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
