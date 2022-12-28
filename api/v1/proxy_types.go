@@ -38,12 +38,13 @@ type ProxyPodSpec struct {
 
 // ProxyStatus defines the observed state of Proxy
 type ProxyStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Ready becomes true when the owned Deployment is ready
+	Ready bool `json:"ready,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:printcolumn:name="Ready",type=string,JSONPath=`.status.ready`
 
 // Proxy is the Schema for the proxies API
 type Proxy struct {

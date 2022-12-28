@@ -19,13 +19,18 @@ var _ = Describe("Proxy controller", func() {
 	Context("When a Proxy is created", func() {
 		It("Should create a Deployment and ConfigMap", func(ctx context.Context) {
 			By("Creating a Proxy")
+			proxyKey := types.NamespacedName{
+				Name:      "example",
+				Namespace: "default",
+			}
 			proxy := ktunnelsv1.Proxy{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "example",
-					Namespace: "default",
+					Name:      proxyKey.Name,
+					Namespace: proxyKey.Namespace,
 				},
 			}
 			Expect(k8sClient.Create(ctx, &proxy)).Should(Succeed())
+			Expect(proxy.Status.Ready).Should(BeFalse())
 
 			By("Getting the Deployment")
 			var deployment appsv1.Deployment
@@ -71,6 +76,18 @@ var _ = Describe("Proxy controller", func() {
 			Expect(cm.Data).Should(HaveKey("bootstrap.json"))
 			Expect(cm.Data).Should(HaveKey("cds.json"))
 			Expect(cm.Data).Should(HaveKey("lds.json"))
+
+			By("Updating the Deployment status")
+			deployment.Status.Replicas = 1
+			deployment.Status.ReadyReplicas = 1
+			deployment.Status.AvailableReplicas = 1
+			Expect(k8sClient.Status().Update(ctx, &deployment)).Should(Succeed())
+
+			By("Getting the Proxy status")
+			Eventually(func(g Gomega) {
+				g.Expect(k8sClient.Get(ctx, proxyKey, &proxy)).Should(Succeed())
+				g.Expect(proxy.Status.Ready).Should(BeTrue())
+			}).Should(Succeed())
 
 		}, SpecTimeout(3*time.Second))
 	})
