@@ -22,10 +22,8 @@ import (
 	"github.com/int128/ktunnels/pkg/envoy"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	crlog "sigs.k8s.io/controller-runtime/pkg/log"
@@ -85,7 +83,7 @@ func (r *TunnelReconciler) reconcileService(ctx context.Context, serviceKey type
 	var svc corev1.Service
 	if err := r.Get(ctx, serviceKey, &svc); err != nil {
 		if apierrors.IsNotFound(err) {
-			svc := newTunnelService(serviceKey, tunnel)
+			svc := envoy.NewService(serviceKey, tunnel)
 			if err := ctrl.SetControllerReference(&tunnel, &svc, r.Scheme); err != nil {
 				log.Error(err, "unable to set a controller reference to service")
 				return err
@@ -102,7 +100,7 @@ func (r *TunnelReconciler) reconcileService(ctx context.Context, serviceKey type
 		return err
 	}
 
-	svcTemplate := newTunnelService(serviceKey, tunnel)
+	svcTemplate := envoy.NewService(serviceKey, tunnel)
 	svcPatch := client.MergeFrom(svc.DeepCopy())
 	svc.Spec.Ports = svcTemplate.Spec.Ports
 	svc.Spec.Selector = svcTemplate.Spec.Selector
@@ -129,27 +127,6 @@ func (r *TunnelReconciler) deleteService(ctx context.Context, serviceKey types.N
 	}
 	log.Info("deleted the service")
 	return nil
-}
-
-func newTunnelService(key types.NamespacedName, tunnel ktunnelsv1.Tunnel) corev1.Service {
-	return corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: key.Namespace,
-			Name:      key.Name,
-		},
-		Spec: corev1.ServiceSpec{
-			Ports: []corev1.ServicePort{
-				{
-					Name:       "proxy",
-					Port:       tunnel.Spec.Port,
-					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: *tunnel.Status.TransitPort},
-				},
-			},
-			Selector: map[string]string{
-				envoy.PodLabelKeyOfProxy: tunnel.Spec.Proxy.Name,
-			},
-		},
-	}
 }
 
 // SetupWithManager sets up the controller with the Manager.
