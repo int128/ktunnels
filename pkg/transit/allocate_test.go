@@ -1,11 +1,12 @@
 package transit
 
 import (
+	"testing"
+
 	"github.com/google/go-cmp/cmp"
 	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/pointer"
-	"testing"
 )
 
 func Test_allocatePort(t *testing.T) {
@@ -29,7 +30,7 @@ func Test_allocatePort(t *testing.T) {
 					Host:        "foo",
 					Port:        100,
 					Proxy:       corev1.LocalObjectReference{Name: "bar"},
-					TransitPort: pointer.Int32Ptr(200),
+					TransitPort: pointer.Int32(200),
 				},
 			},
 		})
@@ -44,7 +45,7 @@ func Test_allocatePort(t *testing.T) {
 					Host:        "foo1",
 					Port:        100,
 					Proxy:       corev1.LocalObjectReference{Name: "bar1"},
-					TransitPort: pointer.Int32Ptr(1000),
+					TransitPort: pointer.Int32(1000),
 				},
 			},
 			{
@@ -52,7 +53,7 @@ func Test_allocatePort(t *testing.T) {
 					Host:        "foo2",
 					Port:        200,
 					Proxy:       corev1.LocalObjectReference{Name: "bar2"},
-					TransitPort: pointer.Int32Ptr(2000),
+					TransitPort: pointer.Int32(2000),
 				},
 			},
 		})
@@ -76,7 +77,7 @@ func Test_allocatePort(t *testing.T) {
 					Host:        "foo2",
 					Port:        200,
 					Proxy:       corev1.LocalObjectReference{Name: "bar2"},
-					TransitPort: pointer.Int32Ptr(2000),
+					TransitPort: pointer.Int32(2000),
 				},
 			},
 		}, mockIntn)
@@ -86,7 +87,7 @@ func Test_allocatePort(t *testing.T) {
 					Host:        "foo1",
 					Port:        100,
 					Proxy:       corev1.LocalObjectReference{Name: "bar1"},
-					TransitPort: pointer.Int32Ptr(22345),
+					TransitPort: pointer.Int32(22345),
 				},
 			},
 		}
@@ -103,7 +104,7 @@ func Test_allocatePort(t *testing.T) {
 					Host:        "foo1",
 					Port:        100,
 					Proxy:       corev1.LocalObjectReference{Name: "bar1"},
-					TransitPort: pointer.Int32Ptr(1000),
+					TransitPort: pointer.Int32(1000),
 				},
 			},
 			{
@@ -120,7 +121,7 @@ func Test_allocatePort(t *testing.T) {
 					Host:        "foo2",
 					Port:        200,
 					Proxy:       corev1.LocalObjectReference{Name: "bar2"},
-					TransitPort: pointer.Int32Ptr(22345),
+					TransitPort: pointer.Int32(22345),
 				},
 			},
 		}
@@ -155,7 +156,7 @@ func Test_allocatePort(t *testing.T) {
 					Host:        "foo1",
 					Port:        100,
 					Proxy:       corev1.LocalObjectReference{Name: "bar1"},
-					TransitPort: pointer.Int32Ptr(22346),
+					TransitPort: pointer.Int32(22346),
 				},
 			},
 			{
@@ -163,7 +164,7 @@ func Test_allocatePort(t *testing.T) {
 					Host:        "foo2",
 					Port:        200,
 					Proxy:       corev1.LocalObjectReference{Name: "bar2"},
-					TransitPort: pointer.Int32Ptr(22347),
+					TransitPort: pointer.Int32(22347),
 				},
 			},
 		}
