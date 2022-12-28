@@ -19,10 +19,14 @@ var _ = Describe("Proxy controller", func() {
 	Context("When a Proxy is created", func() {
 		It("Should create a Deployment and ConfigMap", func(ctx context.Context) {
 			By("Creating a Proxy")
+			proxyKey := types.NamespacedName{
+				Name:      "example",
+				Namespace: "default",
+			}
 			proxy := ktunnelsv1.Proxy{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "example",
-					Namespace: "default",
+					Name:      proxyKey.Name,
+					Namespace: proxyKey.Namespace,
 				},
 			}
 			Expect(k8sClient.Create(ctx, &proxy)).Should(Succeed())
@@ -81,7 +85,7 @@ var _ = Describe("Proxy controller", func() {
 
 			By("Getting the Proxy status")
 			Eventually(func(g Gomega) {
-				g.Expect(k8sClient.Get(ctx, types.NamespacedName{Namespace: "default", Name: "example"}, &proxy)).Should(Succeed())
+				g.Expect(k8sClient.Get(ctx, proxyKey, &proxy)).Should(Succeed())
 				g.Expect(proxy.Status.Ready).Should(BeTrue())
 			}).Should(Succeed())
 
