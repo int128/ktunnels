@@ -16,42 +16,55 @@ import (
 )
 
 var _ = Describe("Proxy controller", func() {
+	var proxy ktunnelsv1.Proxy
+	var tunnel ktunnelsv1.Tunnel
+	BeforeEach(func(ctx context.Context) {
+		By("Creating a Proxy")
+		proxy = ktunnelsv1.Proxy{
+			ObjectMeta: metav1.ObjectMeta{
+				GenerateName: "example-",
+				Namespace:    "default",
+			},
+		}
+		Expect(k8sClient.Create(ctx, &proxy)).Should(Succeed())
+
+		By("Creating a tunnel")
+		tunnel = ktunnelsv1.Tunnel{
+			ObjectMeta: metav1.ObjectMeta{
+				GenerateName: "microservice-database-",
+				Namespace:    "default",
+			},
+			Spec: ktunnelsv1.TunnelSpec{
+				Host:  "microservice-database.staging",
+				Port:  5432,
+				Proxy: corev1.LocalObjectReference{Name: proxy.Name},
+			},
+		}
+		Expect(k8sClient.Create(ctx, &tunnel)).Should(Succeed())
+	})
+
 	Context("When a Proxy is created", func() {
 		It("Should create a Deployment and ConfigMap", func(ctx context.Context) {
-			By("Creating a Proxy")
-			proxyKey := types.NamespacedName{
-				Name:      "example",
-				Namespace: "default",
-			}
-			proxy := ktunnelsv1.Proxy{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      proxyKey.Name,
-					Namespace: proxyKey.Namespace,
-				},
-			}
-			Expect(k8sClient.Create(ctx, &proxy)).Should(Succeed())
-			Expect(proxy.Status.Ready).Should(BeFalse())
-
 			By("Getting the Deployment")
 			var deployment appsv1.Deployment
 			Eventually(func() error {
 				return k8sClient.Get(ctx, types.NamespacedName{
-					Name:      "ktunnels-proxy-example",
+					Name:      "ktunnels-proxy-" + proxy.Name,
 					Namespace: "default",
 				}, &deployment)
 			}).Should(Succeed())
 
 			Expect(deployment.Spec.Selector.MatchLabels).Should(Equal(map[string]string{
-				envoy.PodLabelKeyOfProxy: "example",
+				envoy.PodLabelKeyOfProxy: proxy.Name,
 			}))
 			Expect(deployment.Spec.Template.Labels).Should(Equal(map[string]string{
-				envoy.PodLabelKeyOfProxy: "example",
+				envoy.PodLabelKeyOfProxy: proxy.Name,
 			}))
 			Expect(deployment.Spec.Template.Spec.Volumes).Should(ContainElement(corev1.Volume{
 				Name: "envoy-config",
 				VolumeSource: corev1.VolumeSource{
 					ConfigMap: &corev1.ConfigMapVolumeSource{
-						LocalObjectReference: corev1.LocalObjectReference{Name: "ktunnels-proxy-example"},
+						LocalObjectReference: corev1.LocalObjectReference{Name: "ktunnels-proxy-" + proxy.Name},
 						DefaultMode:          pointer.Int32(420),
 					},
 				},
@@ -68,7 +81,7 @@ var _ = Describe("Proxy controller", func() {
 			var cm corev1.ConfigMap
 			Eventually(func() error {
 				return k8sClient.Get(ctx, types.NamespacedName{
-					Name:      "ktunnels-proxy-example",
+					Name:      "ktunnels-proxy-" + proxy.Name,
 					Namespace: "default",
 				}, &cm)
 			}).Should(Succeed())
@@ -77,15 +90,43 @@ var _ = Describe("Proxy controller", func() {
 			Expect(cm.Data).Should(HaveKey("cds.json"))
 			Expect(cm.Data).Should(HaveKey("lds.json"))
 
-			By("Updating the Deployment status")
+		}, SpecTimeout(3*time.Second))
+
+		It("Should update the status of Tunnel", func(ctx context.Context) {
+			By("Verifying the Tunnel status")
+			Eventually(func(g Gomega) {
+				g.Expect(k8sClient.Get(ctx, types.NamespacedName{
+					Name:      tunnel.Name,
+					Namespace: tunnel.Namespace,
+				}, &tunnel)).Should(Succeed())
+				g.Expect(tunnel.Status.TransitPort).ShouldNot(BeNil())
+			}).Should(Succeed())
+
+		}, SpecTimeout(3*time.Second))
+
+		It("Should update the status of Proxy", func(ctx context.Context) {
+			By("Verifying the status of Proxy")
+			Expect(proxy.Status.Ready).Should(BeFalse())
+
+			By("Updating the status of Deployment")
+			var deployment appsv1.Deployment
+			Eventually(func() error {
+				return k8sClient.Get(ctx, types.NamespacedName{
+					Name:      "ktunnels-proxy-" + proxy.Name,
+					Namespace: "default",
+				}, &deployment)
+			}).Should(Succeed())
 			deployment.Status.Replicas = 1
 			deployment.Status.ReadyReplicas = 1
 			deployment.Status.AvailableReplicas = 1
 			Expect(k8sClient.Status().Update(ctx, &deployment)).Should(Succeed())
 
-			By("Getting the Proxy status")
+			By("Verifying the status of Proxy")
 			Eventually(func(g Gomega) {
-				g.Expect(k8sClient.Get(ctx, proxyKey, &proxy)).Should(Succeed())
+				g.Expect(k8sClient.Get(ctx, types.NamespacedName{
+					Name:      proxy.Name,
+					Namespace: proxy.Namespace,
+				}, &proxy)).Should(Succeed())
 				g.Expect(proxy.Status.Ready).Should(BeTrue())
 			}).Should(Succeed())
 

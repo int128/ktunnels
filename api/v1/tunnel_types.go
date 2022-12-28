@@ -31,17 +31,14 @@ type TunnelSpec struct {
 
 	// Proxy resource to register.
 	Proxy corev1.LocalObjectReference `json:"proxy,omitempty"`
-
-	// Transit port of the proxy.
-	// This value is automatically set by proxy controller. Do not set this manually.
-	// +optional
-	TransitPort *int32 `json:"transitPort,omitempty"`
 }
 
 // TunnelStatus defines the observed state of Tunnel
 type TunnelStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Transit port of the proxy.
+	// This value is automatically set by proxy controller. Do not set this manually.
+	// +optional
+	TransitPort *int32 `json:"transitPort,omitempty"`
 }
 
 //+kubebuilder:object:root=true

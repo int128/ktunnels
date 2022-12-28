@@ -61,14 +61,15 @@ spec:
                     type: string
                 type: object
                 x-kubernetes-map-type: atomic
+            type: object
+          status:
+            description: TunnelStatus defines the observed state of Tunnel
+            properties:
               transitPort:
                 description: Transit port of the proxy. This value is automatically
                   set by proxy controller. Do not set this manually.
                 format: int32
                 type: integer
-            type: object
-          status:
-            description: TunnelStatus defines the observed state of Tunnel
             type: object
         type: object
     served: true

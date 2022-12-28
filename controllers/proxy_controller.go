@@ -120,7 +120,8 @@ func (r *ProxyReconciler) reconcileTunnels(ctx context.Context, mutableTunnels [
 		return nil
 	}
 	for _, tunnel := range allocatedTunnels {
-		if err := r.Update(ctx, tunnel); err != nil {
+		// only transitPort should be changed
+		if err := r.Status().Update(ctx, tunnel); err != nil {
 			log.Error(err, "unable to update the tunnel", "tunnel", tunnel.Name)
 			return err
 		}
