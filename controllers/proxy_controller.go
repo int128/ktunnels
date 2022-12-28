@@ -202,6 +202,13 @@ func (r *ProxyReconciler) reconcileDeployment(ctx context.Context, proxy ktunnel
 		return err
 	}
 	log.Info("updated the deployment")
+
+	proxy.Status.Ready = deployment.Status.Replicas == deployment.Status.ReadyReplicas
+	if err := r.Status().Update(ctx, &proxy); err != nil {
+		log.Error(err, "unable to update the proxy status")
+		return err
+	}
+	log.Info("updated the proxy status")
 	return nil
 }
 
