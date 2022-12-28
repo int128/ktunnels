@@ -163,12 +163,13 @@ func (r *ProxyReconciler) reconcileConfigMap(ctx context.Context, proxy ktunnels
 		log.Error(err, "unable to generate a config map")
 		return err
 	}
+	cmPatch := client.MergeFrom(cm.DeepCopy())
 	cm.Data = cmTemplate.Data
 	if err := ctrl.SetControllerReference(&proxy, &cm, r.Scheme); err != nil {
 		log.Error(err, "unable to set a controller reference")
 		return err
 	}
-	if err := r.Update(ctx, &cm); err != nil {
+	if err := r.Patch(ctx, &cm, cmPatch); err != nil {
 		log.Error(err, "unable to update the config map")
 		return err
 	}
@@ -201,12 +202,13 @@ func (r *ProxyReconciler) reconcileDeployment(ctx context.Context, proxy ktunnel
 	}
 
 	deploymentTemplate := envoy.NewDeployment(deploymentKey, proxy)
+	deploymentPatch := client.MergeFrom(deployment.DeepCopy())
 	deployment.Spec = deploymentTemplate.Spec
 	if err := ctrl.SetControllerReference(&proxy, &deployment, r.Scheme); err != nil {
 		log.Error(err, "unable to set a controller reference")
 		return nil, err
 	}
-	if err := r.Update(ctx, &deployment); err != nil {
+	if err := r.Patch(ctx, &deployment, deploymentPatch); err != nil {
 		log.Error(err, "unable to update the deployment")
 		return nil, err
 	}

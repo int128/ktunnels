@@ -103,13 +103,14 @@ func (r *TunnelReconciler) reconcileService(ctx context.Context, serviceKey type
 	}
 
 	svcTemplate := newTunnelService(serviceKey, tunnel)
+	svcPatch := client.MergeFrom(svc.DeepCopy())
 	svc.Spec.Ports = svcTemplate.Spec.Ports
 	svc.Spec.Selector = svcTemplate.Spec.Selector
 	if err := ctrl.SetControllerReference(&tunnel, &svc, r.Scheme); err != nil {
 		log.Error(err, "unable to set a controller reference")
 		return err
 	}
-	if err := r.Update(ctx, &svc); err != nil {
+	if err := r.Patch(ctx, &svc, svcPatch); err != nil {
 		log.Error(err, "unable to update the service")
 		return err
 	}
