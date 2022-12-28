@@ -35,7 +35,7 @@ func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy) appsv1.Depl
 					Containers: []corev1.Container{
 						{
 							Name:  "envoy",
-							Args:  []string{"-c", "/etc/envoy/bootstrap.yaml"},
+							Args:  []string{"-c", "/etc/envoy/bootstrap.json"},
 							Image: "envoyproxy/envoy:v1.22-latest",
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
