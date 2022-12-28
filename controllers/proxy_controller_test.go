@@ -69,7 +69,7 @@ var _ = Describe("Proxy controller", func() {
 			}).Should(Succeed())
 
 			Expect(cm.Data).Should(HaveKey("bootstrap.json"))
-			Expect(cm.Data).Should(HaveKey("cds.yaml"))
+			Expect(cm.Data).Should(HaveKey("cds.json"))
 			Expect(cm.Data).Should(HaveKey("lds.yaml"))
 
 		}, SpecTimeout(3*time.Second))
