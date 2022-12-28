@@ -3,12 +3,13 @@ package e2e_test
 import (
 	"context"
 	"fmt"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"net/http"
 	"os"
 	"os/exec"
 	"testing"
 	"time"
+
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 func Test(t *testing.T) {

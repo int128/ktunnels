@@ -5,9 +5,9 @@ This is a Kubernetes controller to set up an [Envoy Proxy](https://www.envoyprox
 ## Purpose
 
 For local development, it is nice to develop an application using a real database.
-If a database is running in a **private network** and outside of a cluster, such as Amazon RDS or Azure Database, it is **unreachable** from your computer.
+If a database is running in a **private network** and outside a cluster, such as Amazon RDS or Azure Database, it is **unreachable** from your computer.
 
-This allows you to connect from your computer to a host outside of a cluster.
+This allows you to connect from your computer to a host outside a cluster.
 You just run `kubectl port-forward` and set up your application to connect to localhost.
 
 ![diagram](docs/diagram.svg)
