@@ -27,9 +27,11 @@ func Test_allocatePort(t *testing.T) {
 		g := AllocatePort([]*ktunnelsv1.Tunnel{
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:        "foo",
-					Port:        100,
-					Proxy:       corev1.LocalObjectReference{Name: "bar"},
+					Host:  "foo",
+					Port:  100,
+					Proxy: corev1.LocalObjectReference{Name: "bar"},
+				},
+				Status: ktunnelsv1.TunnelStatus{
 					TransitPort: pointer.Int32(200),
 				},
 			},
@@ -42,17 +44,21 @@ func Test_allocatePort(t *testing.T) {
 		g := AllocatePort([]*ktunnelsv1.Tunnel{
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:        "foo1",
-					Port:        100,
-					Proxy:       corev1.LocalObjectReference{Name: "bar1"},
+					Host:  "foo1",
+					Port:  100,
+					Proxy: corev1.LocalObjectReference{Name: "bar1"},
+				},
+				Status: ktunnelsv1.TunnelStatus{
 					TransitPort: pointer.Int32(1000),
 				},
 			},
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:        "foo2",
-					Port:        200,
-					Proxy:       corev1.LocalObjectReference{Name: "bar2"},
+					Host:  "foo2",
+					Port:  200,
+					Proxy: corev1.LocalObjectReference{Name: "bar2"},
+				},
+				Status: ktunnelsv1.TunnelStatus{
 					TransitPort: pointer.Int32(2000),
 				},
 			},
@@ -74,9 +80,11 @@ func Test_allocatePort(t *testing.T) {
 			},
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:        "foo2",
-					Port:        200,
-					Proxy:       corev1.LocalObjectReference{Name: "bar2"},
+					Host:  "foo2",
+					Port:  200,
+					Proxy: corev1.LocalObjectReference{Name: "bar2"},
+				},
+				Status: ktunnelsv1.TunnelStatus{
 					TransitPort: pointer.Int32(2000),
 				},
 			},
@@ -84,9 +92,11 @@ func Test_allocatePort(t *testing.T) {
 		w := []*ktunnelsv1.Tunnel{
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:        "foo1",
-					Port:        100,
-					Proxy:       corev1.LocalObjectReference{Name: "bar1"},
+					Host:  "foo1",
+					Port:  100,
+					Proxy: corev1.LocalObjectReference{Name: "bar1"},
+				},
+				Status: ktunnelsv1.TunnelStatus{
 					TransitPort: pointer.Int32(22345),
 				},
 			},
@@ -101,9 +111,11 @@ func Test_allocatePort(t *testing.T) {
 		g := allocatePort([]*ktunnelsv1.Tunnel{
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:        "foo1",
-					Port:        100,
-					Proxy:       corev1.LocalObjectReference{Name: "bar1"},
+					Host:  "foo1",
+					Port:  100,
+					Proxy: corev1.LocalObjectReference{Name: "bar1"},
+				},
+				Status: ktunnelsv1.TunnelStatus{
 					TransitPort: pointer.Int32(1000),
 				},
 			},
@@ -118,9 +130,11 @@ func Test_allocatePort(t *testing.T) {
 		w := []*ktunnelsv1.Tunnel{
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:        "foo2",
-					Port:        200,
-					Proxy:       corev1.LocalObjectReference{Name: "bar2"},
+					Host:  "foo2",
+					Port:  200,
+					Proxy: corev1.LocalObjectReference{Name: "bar2"},
+				},
+				Status: ktunnelsv1.TunnelStatus{
 					TransitPort: pointer.Int32(22345),
 				},
 			},
@@ -153,17 +167,21 @@ func Test_allocatePort(t *testing.T) {
 		w := []*ktunnelsv1.Tunnel{
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:        "foo1",
-					Port:        100,
-					Proxy:       corev1.LocalObjectReference{Name: "bar1"},
+					Host:  "foo1",
+					Port:  100,
+					Proxy: corev1.LocalObjectReference{Name: "bar1"},
+				},
+				Status: ktunnelsv1.TunnelStatus{
 					TransitPort: pointer.Int32(22346),
 				},
 			},
 			{
 				Spec: ktunnelsv1.TunnelSpec{
-					Host:        "foo2",
-					Port:        200,
-					Proxy:       corev1.LocalObjectReference{Name: "bar2"},
+					Host:  "foo2",
+					Port:  200,
+					Proxy: corev1.LocalObjectReference{Name: "bar2"},
+				},
+				Status: ktunnelsv1.TunnelStatus{
 					TransitPort: pointer.Int32(22347),
 				},
 			},

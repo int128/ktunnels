@@ -58,9 +58,11 @@ func Test_generateLDS(t *testing.T) {
 				Namespace: "default",
 			},
 			Spec: ktunnelsv1.TunnelSpec{
-				Host:        "microservice-database.staging",
-				Port:        5432,
-				Proxy:       corev1.LocalObjectReference{Name: "example"},
+				Host:  "microservice-database.staging",
+				Port:  5432,
+				Proxy: corev1.LocalObjectReference{Name: "example"},
+			},
+			Status: ktunnelsv1.TunnelStatus{
 				TransitPort: pointer.Int32(30000),
 			},
 		},

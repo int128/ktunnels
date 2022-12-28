@@ -67,7 +67,7 @@ func (r *TunnelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	}
 
 	serviceKey := types.NamespacedName{Namespace: tunnel.Namespace, Name: tunnel.Name}
-	if tunnel.Spec.TransitPort == nil {
+	if tunnel.Status.TransitPort == nil {
 		if err := r.deleteService(ctx, serviceKey); err != nil {
 			return ctrl.Result{}, err
 		}
@@ -141,7 +141,7 @@ func newTunnelService(key types.NamespacedName, tunnel ktunnelsv1.Tunnel) corev1
 				{
 					Name:       "proxy",
 					Port:       tunnel.Spec.Port,
-					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: *tunnel.Spec.TransitPort},
+					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: *tunnel.Status.TransitPort},
 				},
 			},
 			Selector: map[string]string{

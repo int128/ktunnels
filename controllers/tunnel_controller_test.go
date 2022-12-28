@@ -27,8 +27,8 @@ var _ = Describe("Tunnel controller", func() {
 			By("Creating a tunnel")
 			tunnel := ktunnelsv1.Tunnel{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "microservice-database",
-					Namespace: "default",
+					GenerateName: "microservice-database-",
+					Namespace:    "default",
 				},
 				Spec: ktunnelsv1.TunnelSpec{
 					Host:  "microservice-database.staging",
@@ -42,7 +42,7 @@ var _ = Describe("Tunnel controller", func() {
 			var svc corev1.Service
 			Eventually(func() error {
 				return k8sClient.Get(ctx, types.NamespacedName{
-					Name:      "microservice-database",
+					Name:      tunnel.Name,
 					Namespace: "default",
 				}, &svc)
 			}).Should(Succeed())

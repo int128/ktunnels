@@ -20,21 +20,21 @@ func allocatePort(mutableTunnels []*ktunnelsv1.Tunnel, randIntn randIntnFunc) []
 
 	for _, item := range mutableTunnels {
 		// tunnel is not allocated
-		if item.Spec.TransitPort == nil {
+		if item.Status.TransitPort == nil {
 			needToReconcile = append(needToReconcile, item)
 			continue
 		}
 		// dedupe
-		if _, exists := portSet[*item.Spec.TransitPort]; exists {
+		if _, exists := portSet[*item.Status.TransitPort]; exists {
 			needToReconcile = append(needToReconcile, item)
 			continue
 		}
-		portSet[*item.Spec.TransitPort] = struct{}{}
+		portSet[*item.Status.TransitPort] = struct{}{}
 	}
 
 	for _, item := range needToReconcile {
 		p := allocateAvailablePort(portSet, randIntn)
-		item.Spec.TransitPort = p
+		item.Status.TransitPort = p
 	}
 	return needToReconcile
 }

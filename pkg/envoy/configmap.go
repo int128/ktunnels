@@ -137,7 +137,7 @@ func generateCDS(tunnels []*ktunnelsv1.Tunnel) (string, error) {
 func generateLDS(tunnels []*ktunnelsv1.Tunnel) (string, error) {
 	var resources []*anypb.Any
 	for _, tunnel := range tunnels {
-		if tunnel.Spec.TransitPort == nil {
+		if tunnel.Status.TransitPort == nil {
 			continue
 		}
 
@@ -155,7 +155,7 @@ func generateLDS(tunnels []*ktunnelsv1.Tunnel) (string, error) {
 					SocketAddress: &corev3.SocketAddress{
 						Address: "0.0.0.0",
 						PortSpecifier: &corev3.SocketAddress_PortValue{
-							PortValue: uint32(*tunnel.Spec.TransitPort),
+							PortValue: uint32(*tunnel.Status.TransitPort),
 						},
 					},
 				},
