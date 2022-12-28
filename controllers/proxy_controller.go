@@ -101,8 +101,9 @@ func (r *ProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 	log.Info("successfully reconciled the deployment")
 
+	proxyPatch := client.MergeFrom(proxy.DeepCopy())
 	proxy.Status.Ready = deployment.Status.Replicas == deployment.Status.ReadyReplicas
-	if err := r.Status().Update(ctx, &proxy); err != nil {
+	if err := r.Status().Patch(ctx, &proxy, proxyPatch); err != nil {
 		log.Error(err, "unable to update the proxy status")
 		return ctrl.Result{}, err
 	}
