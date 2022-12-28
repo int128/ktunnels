@@ -10,7 +10,7 @@ require (
 	google.golang.org/protobuf v1.28.0
 	k8s.io/api v0.25.5
 	k8s.io/apimachinery v0.25.5
-	k8s.io/client-go v0.25.5
+	k8s.io/client-go/v11 v11.0.0+incompatible
 	k8s.io/utils v0.0.0-20221012122500-cfd413dd9e85
 	sigs.k8s.io/controller-runtime v0.13.1
 )
