@@ -27,10 +27,16 @@ type ProxySpec struct {
 	Replicas *int32 `json:"replicas,omitempty"`
 
 	// +optional
-	PodSpec ProxyPodSpec `json:"podSpec,omitempty"`
+	Template ProxyPodTemplate `json:"template,omitempty"`
 }
 
-// ProxyPodSpec defines the desired state of Pod of Proxy
+// ProxyPodTemplate defines the desired state of a Pod
+type ProxyPodTemplate struct {
+	// +optional
+	Spec ProxyPodSpec `json:"spec,omitempty"`
+}
+
+// ProxyPodSpec defines the desired state of a Pod
 type ProxyPodSpec struct {
 	// +optional
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`

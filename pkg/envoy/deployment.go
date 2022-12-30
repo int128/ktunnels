@@ -70,7 +70,7 @@ func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy) appsv1.Depl
 							},
 						},
 					},
-					ImagePullSecrets: proxy.Spec.PodSpec.ImagePullSecrets,
+					ImagePullSecrets: proxy.Spec.Template.Spec.ImagePullSecrets,
 				},
 			},
 		},
