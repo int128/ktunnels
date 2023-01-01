@@ -11,4 +11,4 @@ spec:
         - name: manager
           env:
             - name: DEFAULT_ENVOY_IMAGE
-              value: envoyproxy/envoy:v1.22-latest # renovate: docker=envoyproxy/envoy
+              value: envoyproxy/envoy:v1.22.6 # renovate: docker=envoyproxy/envoy
