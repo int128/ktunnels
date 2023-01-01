@@ -12,7 +12,7 @@ import (
 
 const PodLabelKeyOfProxy = "ktunnels.int128.github.io/proxy"
 
-func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy) appsv1.Deployment {
+func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy, envoyImage string) appsv1.Deployment {
 	return appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: key.Namespace,
@@ -36,7 +36,7 @@ func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy) appsv1.Depl
 						{
 							Name:  "envoy",
 							Args:  []string{"-c", "/etc/envoy/bootstrap.json"},
-							Image: "envoyproxy/envoy:v1.22-latest",
+							Image: envoyImage,
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
 									corev1.ResourceCPU:    resource.MustParse("10m"),

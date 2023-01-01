@@ -1,6 +1,18 @@
 {
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "github>int128/renovate-base",
     "github>int128/go-actions",
   ],
+  "regexManagers": [
+    {
+      "fileMatch": [
+        "^config/+\\.yaml$",
+      ],
+      "matchStrings": [
+        ": (?<currentValue>.*) # renovate: docker=(?<depName>.*?)\\s",
+      ],
+      "depNameTemplate": "docker",
+    },
+  ]
 }

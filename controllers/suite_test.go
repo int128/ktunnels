@@ -84,8 +84,9 @@ var _ = BeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 
 	err = (&ProxyReconciler{
-		Client: k8sManager.GetClient(),
-		Scheme: k8sManager.GetScheme(),
+		Client:     k8sManager.GetClient(),
+		Scheme:     k8sManager.GetScheme(),
+		EnvoyImage: "envoyproxy/envoy:v0.00-latest",
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 

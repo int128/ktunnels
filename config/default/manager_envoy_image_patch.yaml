@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: system
+spec:
+  template:
+    spec:
+      containers:
+        - name: manager
+          env:
+            - name: DEFAULT_ENVOY_IMAGE
+              value: envoyproxy/envoy:v1.22-latest # renovate: docker=envoyproxy/envoy
