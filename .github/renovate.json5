@@ -12,7 +12,7 @@
       "matchStrings": [
         ": (?<currentValue>.*) # renovate: docker=(?<depName>.*?)\\s",
       ],
-      "depNameTemplate": "docker",
+      "datasourceTemplate": "docker",
     },
   ]
 }
