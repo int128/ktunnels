@@ -7,7 +7,7 @@
   "regexManagers": [
     {
       "fileMatch": [
-        "^config/+\\.yaml$",
+        "^config/.+\\.yaml$",
       ],
       "matchStrings": [
         ": (?<currentValue>.*) # renovate: docker=(?<depName>.*?)\\s",
