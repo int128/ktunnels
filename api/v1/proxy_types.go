@@ -27,11 +27,11 @@ type ProxySpec struct {
 	Replicas *int32 `json:"replicas,omitempty"`
 
 	// +optional
-	Template ProxyPodTemplate `json:"template,omitempty"`
+	Template ProxyPod `json:"template,omitempty"`
 }
 
-// ProxyPodTemplate defines the desired state of a Pod
-type ProxyPodTemplate struct {
+// ProxyPod defines the desired state of a Pod
+type ProxyPod struct {
 	// +optional
 	Spec ProxyPodSpec `json:"spec,omitempty"`
 }
@@ -40,6 +40,16 @@ type ProxyPodTemplate struct {
 type ProxyPodSpec struct {
 	// +optional
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+
+	// +optional
+	Envoy ProxyEnvoy `json:"envoy,omitempty"`
+}
+
+// ProxyEnvoy defines the desired state of an Envoy container
+type ProxyEnvoy struct {
+	// Envoy image tag. Default to the controller environment variable.
+	// +optional
+	Image string `json:"image,omitempty"`
 }
 
 // ProxyStatus defines the observed state of Proxy

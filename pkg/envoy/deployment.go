@@ -13,6 +13,10 @@ import (
 const PodLabelKeyOfProxy = "ktunnels.int128.github.io/proxy"
 
 func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy, envoyImage string) appsv1.Deployment {
+	if proxy.Spec.Template.Spec.Envoy.Image != "" {
+		envoyImage = proxy.Spec.Template.Spec.Envoy.Image
+	}
+
 	return appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: key.Namespace,
