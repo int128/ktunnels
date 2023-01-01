@@ -12,6 +12,7 @@ on:
       - api/**
       - controllers/**
       - pkg/**
+      - config/**
     tags:
       - v*
   pull_request:
@@ -23,6 +24,7 @@ on:
       - api/**
       - controllers/**
       - pkg/**
+      - config/**
 
 jobs:
   build:
