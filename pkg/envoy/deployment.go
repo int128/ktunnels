@@ -4,7 +4,6 @@ import (
 	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
@@ -38,18 +37,10 @@ func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy, envoyImage 
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:  "envoy",
-							Args:  []string{"-c", "/etc/envoy/bootstrap.json"},
-							Image: envoyImage,
-							Resources: corev1.ResourceRequirements{
-								Requests: corev1.ResourceList{
-									corev1.ResourceCPU:    resource.MustParse("10m"),
-									corev1.ResourceMemory: resource.MustParse("64Mi"),
-								},
-								Limits: corev1.ResourceList{
-									corev1.ResourceMemory: resource.MustParse("64Mi"),
-								},
-							},
+							Name:      "envoy",
+							Args:      []string{"-c", "/etc/envoy/bootstrap.json"},
+							Image:     envoyImage,
+							Resources: proxy.Spec.Template.Spec.Envoy.Resources,
 							SecurityContext: &corev1.SecurityContext{
 								AllowPrivilegeEscalation: pointer.Bool(false),
 							},

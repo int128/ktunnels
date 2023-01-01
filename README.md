@@ -36,6 +36,15 @@ kind: Proxy
 metadata:
   name: default
 spec:
+  template:
+    spec:
+      envoy:
+        resources:
+          requests:
+            cpu: 10m
+            memory: 64Mi
+          limits:
+            memory: 64Mi
 ```
 
 ```yaml
