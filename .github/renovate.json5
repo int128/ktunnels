@@ -10,7 +10,7 @@
         "^config/.+\\.yaml$",
       ],
       "matchStrings": [
-        ": (?<currentValue>.*) # renovate: docker=(?<depName>.*?)\\s",
+        "\"(?<depName>.*?):(?<currentValue>.*)\" # renovate: docker\\s",
       ],
       "datasourceTemplate": "docker",
     },
