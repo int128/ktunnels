@@ -45,18 +45,10 @@ func TestNewDeployment(t *testing.T) {
 					Spec: corev1.PodSpec{
 						Containers: []corev1.Container{
 							{
-								Name:  "envoy",
-								Args:  []string{"-c", "/etc/envoy/bootstrap.json"},
-								Image: "envoyproxy/envoy:v0.00-latest",
-								Resources: corev1.ResourceRequirements{
-									Requests: corev1.ResourceList{
-										corev1.ResourceCPU:    resource.MustParse("10m"),
-										corev1.ResourceMemory: resource.MustParse("64Mi"),
-									},
-									Limits: corev1.ResourceList{
-										corev1.ResourceMemory: resource.MustParse("64Mi"),
-									},
-								},
+								Name:      "envoy",
+								Args:      []string{"-c", "/etc/envoy/bootstrap.json"},
+								Image:     "envoyproxy/envoy:v0.00-latest",
+								Resources: corev1.ResourceRequirements{},
 								SecurityContext: &corev1.SecurityContext{
 									AllowPrivilegeEscalation: pointer.Bool(false),
 								},
@@ -104,6 +96,15 @@ func TestNewDeployment(t *testing.T) {
 							ImagePullSecrets: []corev1.LocalObjectReference{{Name: "docker-hub"}},
 							Envoy: ktunnelsv1.ProxyEnvoy{
 								Image: "1234567890.dkr.ecr.us-east-1.amazonaws.com/envoy:v9.99",
+								Resources: corev1.ResourceRequirements{
+									Requests: corev1.ResourceList{
+										corev1.ResourceCPU:    resource.MustParse("10m"),
+										corev1.ResourceMemory: resource.MustParse("64Mi"),
+									},
+									Limits: corev1.ResourceList{
+										corev1.ResourceMemory: resource.MustParse("64Mi"),
+									},
+								},
 							},
 						},
 					},

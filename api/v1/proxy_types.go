@@ -50,6 +50,9 @@ type ProxyEnvoy struct {
 	// Envoy image tag. Default to the controller environment variable.
 	// +optional
 	Image string `json:"image,omitempty"`
+
+	// +optional
+	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 // ProxyStatus defines the observed state of Proxy
