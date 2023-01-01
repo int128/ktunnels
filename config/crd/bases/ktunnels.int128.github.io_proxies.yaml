@@ -43,11 +43,20 @@ spec:
                 format: int32
                 type: integer
               template:
-                description: ProxyPodTemplate defines the desired state of a Pod
+                description: ProxyPod defines the desired state of a Pod
                 properties:
                   spec:
                     description: ProxyPodSpec defines the desired state of a Pod
                     properties:
+                      envoy:
+                        description: ProxyEnvoy defines the desired state of an Envoy
+                          container
+                        properties:
+                          image:
+                            description: Envoy image tag. Default to the controller
+                              environment variable.
+                            type: string
+                        type: object
                       imagePullSecrets:
                         items:
                           description: LocalObjectReference contains enough information
