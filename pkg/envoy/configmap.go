@@ -56,7 +56,7 @@ func generateBootstrap() (string, error) {
 			Address: &corev3.Address{
 				Address: &corev3.Address_SocketAddress{
 					SocketAddress: &corev3.SocketAddress{
-						Address: "127.0.0.1",
+						Address: "0.0.0.0",
 						PortSpecifier: &corev3.SocketAddress_PortValue{
 							PortValue: 9901,
 						},
