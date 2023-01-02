@@ -53,12 +53,18 @@ func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy) appsv1.Depl
 								},
 								proxy.Spec.Template.Spec.Envoy.Resources,
 							),
+							Ports: []corev1.ContainerPort{
+								{
+									Name:          "admin",
+									ContainerPort: 9901,
+								},
+							},
 							ReadinessProbe: &corev1.Probe{
 								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{
 										// https://www.envoyproxy.io/docs/envoy/latest/operations/admin#get--ready
 										Path:   "/ready",
-										Port:   intstr.FromInt(9901),
+										Port:   intstr.FromString("admin"),
 										Scheme: "HTTP",
 									},
 								},
