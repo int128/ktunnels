@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/pointer"
 )
 
@@ -55,6 +56,26 @@ func TestNewDeployment(t *testing.T) {
 									Limits: corev1.ResourceList{
 										corev1.ResourceMemory: resource.MustParse("64Mi"),
 									},
+								},
+								Ports: []corev1.ContainerPort{
+									{
+										Name:          "admin",
+										ContainerPort: 9901,
+									},
+								},
+								ReadinessProbe: &corev1.Probe{
+									ProbeHandler: corev1.ProbeHandler{
+										HTTPGet: &corev1.HTTPGetAction{
+											Path:   "/ready",
+											Port:   intstr.FromString("admin"),
+											Scheme: "HTTP",
+										},
+									},
+									TimeoutSeconds:      1,
+									PeriodSeconds:       5,
+									SuccessThreshold:    1,
+									FailureThreshold:    3,
+									InitialDelaySeconds: 1,
 								},
 								SecurityContext: &corev1.SecurityContext{
 									AllowPrivilegeEscalation: pointer.Bool(false),
@@ -153,6 +174,26 @@ func TestNewDeployment(t *testing.T) {
 								},
 								SecurityContext: &corev1.SecurityContext{
 									AllowPrivilegeEscalation: pointer.Bool(false),
+								},
+								Ports: []corev1.ContainerPort{
+									{
+										Name:          "admin",
+										ContainerPort: 9901,
+									},
+								},
+								ReadinessProbe: &corev1.Probe{
+									ProbeHandler: corev1.ProbeHandler{
+										HTTPGet: &corev1.HTTPGetAction{
+											Path:   "/ready",
+											Port:   intstr.FromString("admin"),
+											Scheme: "HTTP",
+										},
+									},
+									TimeoutSeconds:      1,
+									PeriodSeconds:       5,
+									SuccessThreshold:    1,
+									FailureThreshold:    3,
+									InitialDelaySeconds: 1,
 								},
 								VolumeMounts: []corev1.VolumeMount{
 									{
