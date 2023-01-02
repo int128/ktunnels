@@ -32,3 +32,6 @@ test:
 
 logs-controller:
 	-kubectl -n ktunnels-system logs -l control-plane=controller-manager --all-containers --tail=-1
+
+logs-proxy:
+	-kubectl logs -l ktunnels.int128.github.io/proxy=default --all-containers --tail=-1
