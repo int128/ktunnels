@@ -83,10 +83,10 @@ func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy) appsv1.Depl
 	}
 }
 
-func mergeValue[E any](defaultValue E, candidates ...*E) E {
-	for i := len(candidates) - 1; i >= 0; i-- {
-		if candidates[i] != nil {
-			return *candidates[i]
+func mergeValue[T any](defaultValue T, overrides ...*T) T {
+	for i := len(overrides) - 1; i >= 0; i-- {
+		if overrides[i] != nil {
+			return *overrides[i]
 		}
 	}
 	return defaultValue
