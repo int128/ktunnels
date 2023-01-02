@@ -7,10 +7,10 @@
   "regexManagers": [
     {
       "fileMatch": [
-        "^config/.+\\.yaml$",
+        "^pkg/envoy/.+\\.go$",
       ],
       "matchStrings": [
-        "\"(?<depName>.*?):(?<currentValue>.*)\" # renovate: docker\\s",
+        "\"(?<depName>.*?):(?<currentValue>.*)\" // renovate: docker\\s",
       ],
       "datasourceTemplate": "docker",
     },

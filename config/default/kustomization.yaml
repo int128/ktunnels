@@ -30,8 +30,6 @@ patchesStrategicMerge:
 # endpoint w/o any authn/z, please comment the following line.
 - manager_auth_proxy_patch.yaml
 
-# Inject the envoy image
-- manager_envoy_image_patch.yaml
 
 
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix including the one in
