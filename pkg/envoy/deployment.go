@@ -4,6 +4,7 @@ import (
 	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
@@ -11,11 +12,7 @@ import (
 
 const PodLabelKeyOfProxy = "ktunnels.int128.github.io/proxy"
 
-func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy, envoyImage string) appsv1.Deployment {
-	if proxy.Spec.Template.Spec.Envoy.Image != "" {
-		envoyImage = proxy.Spec.Template.Spec.Envoy.Image
-	}
-
+func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy) appsv1.Deployment {
 	return appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: key.Namespace,
@@ -37,10 +34,24 @@ func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy, envoyImage 
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:      "envoy",
-							Args:      []string{"-c", "/etc/envoy/bootstrap.json"},
-							Image:     envoyImage,
-							Resources: proxy.Spec.Template.Spec.Envoy.Resources,
+							Name: "envoy",
+							Args: []string{"-c", "/etc/envoy/bootstrap.json"},
+							Image: mergeValue(
+								DefaultImage,
+								proxy.Spec.Template.Spec.Envoy.Image,
+							),
+							Resources: mergeValue(
+								corev1.ResourceRequirements{
+									Requests: corev1.ResourceList{
+										corev1.ResourceCPU:    resource.MustParse("10m"),
+										corev1.ResourceMemory: resource.MustParse("64Mi"),
+									},
+									Limits: corev1.ResourceList{
+										corev1.ResourceMemory: resource.MustParse("64Mi"),
+									},
+								},
+								proxy.Spec.Template.Spec.Envoy.Resources,
+							),
 							SecurityContext: &corev1.SecurityContext{
 								AllowPrivilegeEscalation: pointer.Bool(false),
 							},
@@ -70,4 +81,13 @@ func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy, envoyImage 
 			},
 		},
 	}
+}
+
+func mergeValue[E any](defaultValue E, candidates ...*E) E {
+	for i := len(candidates) - 1; i >= 0; i-- {
+		if candidates[i] != nil {
+			return *candidates[i]
+		}
+	}
+	return defaultValue
 }

@@ -90,9 +90,8 @@ func main() {
 	}
 
 	if err = (&controllers.ProxyReconciler{
-		Client:     mgr.GetClient(),
-		Scheme:     mgr.GetScheme(),
-		EnvoyImage: os.Getenv("DEFAULT_ENVOY_IMAGE"),
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Proxy")
 		os.Exit(1)

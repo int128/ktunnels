@@ -53,12 +53,12 @@ spec:
                           container
                         properties:
                           image:
-                            description: Envoy image tag. Default to the controller
-                              environment variable.
+                            description: Envoy image tag. Default to envoy.DefaultImage
+                              value.
                             type: string
                           resources:
-                            description: ResourceRequirements describes the compute
-                              resource requirements.
+                            description: Resource requirements. Default to the suitable
+                              value.
                             properties:
                               limits:
                                 additionalProperties:

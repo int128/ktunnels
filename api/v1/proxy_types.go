@@ -47,12 +47,15 @@ type ProxyPodSpec struct {
 
 // ProxyEnvoy defines the desired state of an Envoy container
 type ProxyEnvoy struct {
-	// Envoy image tag. Default to the controller environment variable.
+	// Envoy image tag.
+	// Default to the image shipped with the controller.
 	// +optional
-	Image string `json:"image,omitempty"`
+	Image *string `json:"image,omitempty"`
 
+	// Resource requirements.
+	// Default to the suitable value.
 	// +optional
-	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
+	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 // ProxyStatus defines the observed state of Proxy

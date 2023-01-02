@@ -48,8 +48,6 @@ const (
 type ProxyReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
-
-	EnvoyImage string
 }
 
 //+kubebuilder:rbac:groups=ktunnels.int128.github.io,resources=proxies,verbs=get;list;watch;create;update;patch;delete
@@ -186,7 +184,7 @@ func (r *ProxyReconciler) reconcileDeployment(ctx context.Context, proxy ktunnel
 	var deployment appsv1.Deployment
 	if err := r.Get(ctx, deploymentKey, &deployment); err != nil {
 		if apierrors.IsNotFound(err) {
-			deployment := envoy.NewDeployment(deploymentKey, proxy, r.EnvoyImage)
+			deployment := envoy.NewDeployment(deploymentKey, proxy)
 			if err := ctrl.SetControllerReference(&proxy, &deployment, r.Scheme); err != nil {
 				log.Error(err, "unable to set a controller reference")
 				return nil, err
@@ -203,7 +201,7 @@ func (r *ProxyReconciler) reconcileDeployment(ctx context.Context, proxy ktunnel
 		return nil, err
 	}
 
-	deploymentTemplate := envoy.NewDeployment(deploymentKey, proxy, r.EnvoyImage)
+	deploymentTemplate := envoy.NewDeployment(deploymentKey, proxy)
 	deploymentPatch := client.MergeFrom(deployment.DeepCopy())
 	deployment.Spec = deploymentTemplate.Spec
 	if err := ctrl.SetControllerReference(&proxy, &deployment, r.Scheme); err != nil {
