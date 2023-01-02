@@ -10,9 +10,11 @@ import (
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Proxy controller", func() {
@@ -89,7 +91,6 @@ var _ = Describe("Proxy controller", func() {
 			Expect(cm.Data).Should(HaveKey("bootstrap.json"))
 			Expect(cm.Data).Should(HaveKey("cds.json"))
 			Expect(cm.Data).Should(HaveKey("lds.json"))
-
 		}, SpecTimeout(3*time.Second))
 
 		It("Should update the status of Tunnel", func(ctx context.Context) {
@@ -101,7 +102,6 @@ var _ = Describe("Proxy controller", func() {
 				}, &tunnel)).Should(Succeed())
 				g.Expect(tunnel.Status.TransitPort).ShouldNot(BeNil())
 			}).Should(Succeed())
-
 		}, SpecTimeout(3*time.Second))
 
 		It("Should update the status of Proxy", func(ctx context.Context) {
@@ -129,7 +129,81 @@ var _ = Describe("Proxy controller", func() {
 				}, &proxy)).Should(Succeed())
 				g.Expect(proxy.Status.Ready).Should(BeTrue())
 			}).Should(Succeed())
+		}, SpecTimeout(3*time.Second))
+	})
 
+	Context("When a Tunnel is added", func() {
+		It("Should update the ConfigMap", func(ctx context.Context) {
+			By("Getting the ConfigMap")
+			var cmOriginal corev1.ConfigMap
+			Eventually(func() error {
+				return k8sClient.Get(ctx, types.NamespacedName{
+					Name:      "ktunnels-proxy-" + proxy.Name,
+					Namespace: "default",
+				}, &cmOriginal)
+			}).Should(Succeed())
+
+			By("Creating a tunnel")
+			tunnel2 := ktunnelsv1.Tunnel{
+				ObjectMeta: metav1.ObjectMeta{
+					GenerateName: "redis-",
+					Namespace:    "default",
+				},
+				Spec: ktunnelsv1.TunnelSpec{
+					Host:  "redis.staging",
+					Port:  6379,
+					Proxy: corev1.LocalObjectReference{Name: proxy.Name},
+				},
+			}
+			Expect(k8sClient.Create(ctx, &tunnel2)).Should(Succeed())
+
+			By("Verifying the ConfigMap is updated")
+			Eventually(func(g Gomega) {
+				var cmUpdated corev1.ConfigMap
+				g.Expect(k8sClient.Get(ctx, types.NamespacedName{
+					Name:      "ktunnels-proxy-" + proxy.Name,
+					Namespace: "default",
+				}, &cmUpdated)).Should(Succeed())
+				g.Expect(cmUpdated.Data["cds.json"]).ShouldNot(Equal(cmOriginal.Data["cds.json"]))
+				g.Expect(cmUpdated.Data["lds.json"]).ShouldNot(Equal(cmOriginal.Data["lds.json"]))
+			}).Should(Succeed())
+		}, SpecTimeout(3*time.Second))
+	})
+
+	Context("When the Proxy is added", func() {
+		It("Should update the Deployment", func(ctx context.Context) {
+			resources := corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("3Gi"),
+				},
+				Limits: corev1.ResourceList{
+					corev1.ResourceMemory: resource.MustParse("6Gi"),
+				},
+			}
+
+			By("Getting the Deployment")
+			var deployment appsv1.Deployment
+			Eventually(func() error {
+				return k8sClient.Get(ctx, types.NamespacedName{
+					Name:      "ktunnels-proxy-" + proxy.Name,
+					Namespace: "default",
+				}, &deployment)
+			}).Should(Succeed())
+			Expect(deployment.Spec.Template.Spec.Containers[0].Resources).ShouldNot(Equal(resources))
+
+			By("Updating the Proxy")
+			proxyPatch := client.MergeFrom(proxy.DeepCopy())
+			proxy.Spec.Template.Spec.Envoy.Resources = &resources
+			Expect(k8sClient.Patch(ctx, &proxy, proxyPatch)).Should(Succeed())
+
+			By("Verifying the Deployment is updated")
+			Eventually(func(g Gomega) {
+				g.Expect(k8sClient.Get(ctx, types.NamespacedName{
+					Name:      "ktunnels-proxy-" + proxy.Name,
+					Namespace: "default",
+				}, &deployment)).Should(Succeed())
+				g.Expect(deployment.Spec.Template.Spec.Containers[0].Resources).Should(Equal(resources))
+			}).Should(Succeed())
 		}, SpecTimeout(3*time.Second))
 	})
 })
