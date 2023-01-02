@@ -52,6 +52,18 @@ func generateBootstrap() (string, error) {
 			Cluster: "test-cluster",
 			Id:      "test-id",
 		},
+		Admin: &bootstrapv3.Admin{
+			Address: &corev3.Address{
+				Address: &corev3.Address_SocketAddress{
+					SocketAddress: &corev3.SocketAddress{
+						Address: "127.0.0.1",
+						PortSpecifier: &corev3.SocketAddress_PortValue{
+							PortValue: 9901,
+						},
+					},
+				},
+			},
+		},
 		DynamicResources: &bootstrapv3.Bootstrap_DynamicResources{
 			CdsConfig: &corev3.ConfigSource{
 				ResourceApiVersion: corev3.ApiVersion_V3,
