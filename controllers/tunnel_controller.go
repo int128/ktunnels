@@ -61,17 +61,39 @@ func (r *TunnelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	if err := r.Get(ctx, proxyKey, &proxy); err != nil {
 		// corresponding proxy resource must exist
 		log.Error(err, "unable to fetch the proxy", "proxy", proxyKey)
+
+		tunnelPatch := client.MergeFrom(tunnel.DeepCopy())
+		tunnel.Status.Ready = false
+		tunnel.Status.Reason = ktunnelsv1.TunnelStatusReasonNoSuchProxy
+		if err := r.Status().Patch(ctx, &tunnel, tunnelPatch); err != nil {
+			log.Error(err, "unable to update the tunnel status")
+			return ctrl.Result{}, err
+		}
 		return ctrl.Result{}, err
 	}
 
 	serviceKey := types.NamespacedName{Namespace: tunnel.Namespace, Name: tunnel.Name}
-	if tunnel.Status.TransitPort == nil {
-		if err := r.deleteService(ctx, serviceKey); err != nil {
+	if err := r.reconcileService(ctx, serviceKey, tunnel); err != nil {
+		tunnelPatch := client.MergeFrom(tunnel.DeepCopy())
+		tunnel.Status.Ready = false
+		tunnel.Status.Reason = ktunnelsv1.TunnelStatusReasonServiceFailure
+		if err := r.Status().Patch(ctx, &tunnel, tunnelPatch); err != nil {
+			log.Error(err, "unable to update the tunnel status")
 			return ctrl.Result{}, err
 		}
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, err
 	}
-	if err := r.reconcileService(ctx, serviceKey, tunnel); err != nil {
+
+	tunnelPatch := client.MergeFrom(tunnel.DeepCopy())
+	if tunnel.Status.TransitPort == nil {
+		tunnel.Status.Ready = false
+		tunnel.Status.Reason = ktunnelsv1.TunnelStatusReasonWaitForProxy
+	} else {
+		tunnel.Status.Ready = true
+		tunnel.Status.Reason = ""
+	}
+	if err := r.Status().Patch(ctx, &tunnel, tunnelPatch); err != nil {
+		log.Error(err, "unable to update the tunnel status")
 		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
@@ -79,6 +101,14 @@ func (r *TunnelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 
 func (r *TunnelReconciler) reconcileService(ctx context.Context, serviceKey types.NamespacedName, tunnel ktunnelsv1.Tunnel) error {
 	log := crlog.FromContext(ctx, "service", serviceKey)
+
+	if tunnel.Status.TransitPort == nil {
+		if err := r.deleteService(ctx, serviceKey); err != nil {
+			log.Error(err, "unable to delete the service")
+			return err
+		}
+		return nil
+	}
 
 	var svc corev1.Service
 	if err := r.Get(ctx, serviceKey, &svc); err != nil {

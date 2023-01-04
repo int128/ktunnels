@@ -39,10 +39,27 @@ type TunnelStatus struct {
 	// This value is automatically set by proxy controller. Do not set this manually.
 	// +optional
 	TransitPort *int32 `json:"transitPort,omitempty"`
+
+	// True if the service is created.
+	// +optional
+	Ready bool `json:"ready,omitempty"`
+
+	// Reason of failure.
+	// +optional
+	Reason TunnelStatusReason `json:"reason,omitempty"`
 }
+
+type TunnelStatusReason string
+
+const (
+	TunnelStatusReasonNoSuchProxy    TunnelStatusReason = "NoSuchProxy"
+	TunnelStatusReasonWaitForProxy   TunnelStatusReason = "WaitForProxy"
+	TunnelStatusReasonServiceFailure TunnelStatusReason = "ServiceFailure"
+)
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Ready",type=string,JSONPath=`.status.ready`
 // +kubebuilder:printcolumn:name="Host",type=string,JSONPath=`.spec.host`
 // +kubebuilder:printcolumn:name="Port",type=integer,JSONPath=`.spec.port`
 // +kubebuilder:printcolumn:name="Proxy",type=string,JSONPath=`.spec.proxy.name`

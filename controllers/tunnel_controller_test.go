@@ -48,6 +48,45 @@ var _ = Describe("Tunnel controller", func() {
 			}).Should(Succeed())
 			Expect(svc.Spec.Type).Should(Equal(corev1.ServiceTypeClusterIP))
 
+			By("Verifying the status")
+			Eventually(func(g Gomega) {
+				g.Expect(k8sClient.Get(ctx, types.NamespacedName{
+					Name:      tunnel.Name,
+					Namespace: tunnel.Namespace,
+				}, &tunnel)).Should(Succeed())
+				g.Expect(tunnel.Status.TransitPort).ShouldNot(BeNil())
+				g.Expect(tunnel.Status.Ready).Should(BeTrue())
+				g.Expect(tunnel.Status.Reason).Should(BeEmpty())
+			}).Should(Succeed())
+		}, SpecTimeout(3*time.Second))
+	})
+
+	Context("When a tunnel is created without proxy", func() {
+		It("Should not be ready", func(ctx context.Context) {
+			By("Creating a tunnel")
+			tunnel := ktunnelsv1.Tunnel{
+				ObjectMeta: metav1.ObjectMeta{
+					GenerateName: "microservice-database-",
+					Namespace:    "default",
+				},
+				Spec: ktunnelsv1.TunnelSpec{
+					Host:  "microservice-database.staging",
+					Port:  5432,
+					Proxy: corev1.LocalObjectReference{Name: "dummy-should-not-exist"},
+				},
+			}
+			Expect(k8sClient.Create(ctx, &tunnel)).Should(Succeed())
+
+			By("Verifying the status")
+			Eventually(func(g Gomega) {
+				g.Expect(k8sClient.Get(ctx, types.NamespacedName{
+					Name:      tunnel.Name,
+					Namespace: tunnel.Namespace,
+				}, &tunnel)).Should(Succeed())
+				g.Expect(tunnel.Status.TransitPort).Should(BeNil())
+				g.Expect(tunnel.Status.Ready).Should(BeFalse())
+				g.Expect(tunnel.Status.Reason).Should(Equal(ktunnelsv1.TunnelStatusReasonNoSuchProxy))
+			}).Should(Succeed())
 		}, SpecTimeout(3*time.Second))
 	})
 })
