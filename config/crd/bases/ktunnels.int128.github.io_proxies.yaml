@@ -53,8 +53,8 @@ spec:
                           container
                         properties:
                           image:
-                            description: Envoy image tag. Default to envoy.DefaultImage
-                              value.
+                            description: Envoy image tag. Default to the image shipped
+                              with the controller.
                             type: string
                           resources:
                             description: Resource requirements. Default to the suitable
