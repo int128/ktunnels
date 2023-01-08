@@ -57,33 +57,68 @@ func (r *TunnelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	}
 
 	proxyKey := types.NamespacedName{Namespace: tunnel.Namespace, Name: tunnel.Spec.Proxy.Name}
+	svcKey := types.NamespacedName{Namespace: tunnel.Namespace, Name: tunnel.Name}
 	var proxy ktunnelsv1.Proxy
 	if err := r.Get(ctx, proxyKey, &proxy); err != nil {
-		// corresponding proxy resource must exist
-		log.Error(err, "unable to fetch the proxy", "proxy", proxyKey)
+		if !apierrors.IsNotFound(err) {
+			log.Error(err, "unable to fetch the proxy", "proxy", proxyKey)
+			return ctrl.Result{}, err
+		}
+
+		log.Error(err, "no such proxy", "proxy", proxyKey)
+		tunnelPatch := client.MergeFrom(tunnel.DeepCopy())
+		tunnel.Status.Ready = false
+		if err := r.Status().Patch(ctx, &tunnel, tunnelPatch); err != nil {
+			log.Error(err, "unable to update the tunnel status")
+			return ctrl.Result{}, err
+		}
+		if err := r.deleteServiceIfExists(ctx, svcKey); err != nil {
+			log.Error(err, "unable to delete the service")
+			return ctrl.Result{}, err
+		}
 		return ctrl.Result{}, err
 	}
 
-	serviceKey := types.NamespacedName{Namespace: tunnel.Namespace, Name: tunnel.Name}
 	if tunnel.Status.TransitPort == nil {
-		if err := r.deleteService(ctx, serviceKey); err != nil {
+		tunnelPatch := client.MergeFrom(tunnel.DeepCopy())
+		tunnel.Status.Ready = false
+		if err := r.Status().Patch(ctx, &tunnel, tunnelPatch); err != nil {
+			log.Error(err, "unable to update the tunnel status")
+			return ctrl.Result{}, err
+		}
+		if err := r.deleteServiceIfExists(ctx, svcKey); err != nil {
+			log.Error(err, "unable to delete the service")
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
 	}
-	if err := r.reconcileService(ctx, serviceKey, tunnel); err != nil {
+
+	if err := r.reconcileService(ctx, svcKey, tunnel); err != nil {
+		tunnelPatch := client.MergeFrom(tunnel.DeepCopy())
+		tunnel.Status.Ready = false
+		if err := r.Status().Patch(ctx, &tunnel, tunnelPatch); err != nil {
+			log.Error(err, "unable to update the tunnel status")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, err
+	}
+
+	tunnelPatch := client.MergeFrom(tunnel.DeepCopy())
+	tunnel.Status.Ready = true
+	if err := r.Status().Patch(ctx, &tunnel, tunnelPatch); err != nil {
+		log.Error(err, "unable to update the tunnel status")
 		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
 }
 
-func (r *TunnelReconciler) reconcileService(ctx context.Context, serviceKey types.NamespacedName, tunnel ktunnelsv1.Tunnel) error {
-	log := crlog.FromContext(ctx, "service", serviceKey)
+func (r *TunnelReconciler) reconcileService(ctx context.Context, svcKey types.NamespacedName, tunnel ktunnelsv1.Tunnel) error {
+	log := crlog.FromContext(ctx, "service", svcKey)
 
 	var svc corev1.Service
-	if err := r.Get(ctx, serviceKey, &svc); err != nil {
+	if err := r.Get(ctx, svcKey, &svc); err != nil {
 		if apierrors.IsNotFound(err) {
-			svc := envoy.NewService(serviceKey, tunnel)
+			svc := envoy.NewService(svcKey, tunnel)
 			if err := ctrl.SetControllerReference(&tunnel, &svc, r.Scheme); err != nil {
 				log.Error(err, "unable to set a controller reference to service")
 				return err
@@ -100,7 +135,7 @@ func (r *TunnelReconciler) reconcileService(ctx context.Context, serviceKey type
 		return err
 	}
 
-	svcTemplate := envoy.NewService(serviceKey, tunnel)
+	svcTemplate := envoy.NewService(svcKey, tunnel)
 	svcPatch := client.MergeFrom(svc.DeepCopy())
 	svc.Spec.Ports = svcTemplate.Spec.Ports
 	svc.Spec.Selector = svcTemplate.Spec.Selector
@@ -116,10 +151,10 @@ func (r *TunnelReconciler) reconcileService(ctx context.Context, serviceKey type
 	return nil
 }
 
-func (r *TunnelReconciler) deleteService(ctx context.Context, serviceKey types.NamespacedName) error {
-	log := crlog.FromContext(ctx, "service", serviceKey)
+func (r *TunnelReconciler) deleteServiceIfExists(ctx context.Context, svcKey types.NamespacedName) error {
+	log := crlog.FromContext(ctx, "service", svcKey)
 	var svc corev1.Service
-	if err := r.Get(ctx, serviceKey, &svc); err != nil {
+	if err := r.Get(ctx, svcKey, &svc); err != nil {
 		return client.IgnoreNotFound(err)
 	}
 	if err := r.Delete(ctx, &svc); err != nil {

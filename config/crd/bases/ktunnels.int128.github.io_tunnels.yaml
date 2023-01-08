@@ -16,6 +16,9 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
+    - jsonPath: .status.ready
+      name: Ready
+      type: string
     - jsonPath: .spec.host
       name: Host
       type: string
@@ -65,6 +68,9 @@ spec:
           status:
             description: TunnelStatus defines the observed state of Tunnel
             properties:
+              ready:
+                description: True if the service is created.
+                type: boolean
               transitPort:
                 description: Transit port of the proxy. This value is automatically
                   set by proxy controller. Do not set this manually.
