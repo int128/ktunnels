@@ -68,7 +68,6 @@ func (r *TunnelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		log.Error(err, "no such proxy", "proxy", proxyKey)
 		tunnelPatch := client.MergeFrom(tunnel.DeepCopy())
 		tunnel.Status.Ready = false
-		tunnel.Status.Reason = ktunnelsv1.TunnelStatusReasonNoSuchProxy
 		if err := r.Status().Patch(ctx, &tunnel, tunnelPatch); err != nil {
 			log.Error(err, "unable to update the tunnel status")
 			return ctrl.Result{}, err
@@ -83,7 +82,6 @@ func (r *TunnelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	if tunnel.Status.TransitPort == nil {
 		tunnelPatch := client.MergeFrom(tunnel.DeepCopy())
 		tunnel.Status.Ready = false
-		tunnel.Status.Reason = ktunnelsv1.TunnelStatusReasonWaitForProxy
 		if err := r.Status().Patch(ctx, &tunnel, tunnelPatch); err != nil {
 			log.Error(err, "unable to update the tunnel status")
 			return ctrl.Result{}, err
@@ -98,7 +96,6 @@ func (r *TunnelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	if err := r.reconcileService(ctx, svcKey, tunnel); err != nil {
 		tunnelPatch := client.MergeFrom(tunnel.DeepCopy())
 		tunnel.Status.Ready = false
-		tunnel.Status.Reason = ktunnelsv1.TunnelStatusReasonServiceFailure
 		if err := r.Status().Patch(ctx, &tunnel, tunnelPatch); err != nil {
 			log.Error(err, "unable to update the tunnel status")
 			return ctrl.Result{}, err
@@ -108,7 +105,6 @@ func (r *TunnelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 
 	tunnelPatch := client.MergeFrom(tunnel.DeepCopy())
 	tunnel.Status.Ready = true
-	tunnel.Status.Reason = ""
 	if err := r.Status().Patch(ctx, &tunnel, tunnelPatch); err != nil {
 		log.Error(err, "unable to update the tunnel status")
 		return ctrl.Result{}, err

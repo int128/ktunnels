@@ -71,9 +71,6 @@ spec:
               ready:
                 description: True if the service is created.
                 type: boolean
-              reason:
-                description: Reason of failure.
-                type: string
               transitPort:
                 description: Transit port of the proxy. This value is automatically
                   set by proxy controller. Do not set this manually.

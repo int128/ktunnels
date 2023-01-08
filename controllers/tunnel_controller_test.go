@@ -61,7 +61,6 @@ var _ = Describe("Tunnel controller", func() {
 				}, &tunnel)).Should(Succeed())
 				g.Expect(tunnel.Status.TransitPort).ShouldNot(BeNil())
 				g.Expect(tunnel.Status.Ready).Should(BeTrue())
-				g.Expect(tunnel.Status.Reason).Should(BeEmpty())
 			}).Should(Succeed())
 		}, SpecTimeout(3*time.Second))
 	})
@@ -90,7 +89,6 @@ var _ = Describe("Tunnel controller", func() {
 				}, &tunnel)).Should(Succeed())
 				g.Expect(tunnel.Status.TransitPort).Should(BeNil())
 				g.Expect(tunnel.Status.Ready).Should(BeFalse())
-				g.Expect(tunnel.Status.Reason).Should(Equal(ktunnelsv1.TunnelStatusReasonNoSuchProxy))
 			}).Should(Succeed())
 		}, SpecTimeout(3*time.Second))
 
@@ -118,6 +116,16 @@ var _ = Describe("Tunnel controller", func() {
 			Eventually(func() error { return k8sClient.Get(ctx, svcKey, &svc) }).Should(Succeed())
 			Expect(svc.Spec.Type).Should(Equal(corev1.ServiceTypeClusterIP))
 
+			By("Verifying the status")
+			tunnelKey := types.NamespacedName{
+				Name:      tunnel.Name,
+				Namespace: tunnel.Namespace,
+			}
+			Eventually(func(g Gomega) {
+				g.Expect(k8sClient.Get(ctx, tunnelKey, &tunnel)).Should(Succeed())
+				g.Expect(tunnel.Status.Ready).Should(BeTrue())
+			}).Should(Succeed())
+
 			By("Updating the tunnel")
 			tunnelPatch := client.MergeFrom(tunnel.DeepCopy())
 			tunnel.Spec.Proxy.Name = "dummy-should-not-exist"
@@ -125,11 +133,8 @@ var _ = Describe("Tunnel controller", func() {
 
 			By("Verifying the status")
 			Eventually(func(g Gomega) {
-				g.Expect(k8sClient.Get(ctx, types.NamespacedName{
-					Name:      tunnel.Name,
-					Namespace: tunnel.Namespace,
-				}, &tunnel)).Should(Succeed())
-				g.Expect(tunnel.Status.Reason).Should(Equal(ktunnelsv1.TunnelStatusReasonNoSuchProxy))
+				g.Expect(k8sClient.Get(ctx, tunnelKey, &tunnel)).Should(Succeed())
+				g.Expect(tunnel.Status.Ready).Should(BeFalse())
 			}).Should(Succeed())
 
 			By("Verifying the service does not exist")

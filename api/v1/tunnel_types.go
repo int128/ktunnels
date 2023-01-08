@@ -43,19 +43,7 @@ type TunnelStatus struct {
 	// True if the service is created.
 	// +optional
 	Ready bool `json:"ready,omitempty"`
-
-	// Reason of failure.
-	// +optional
-	Reason TunnelStatusReason `json:"reason,omitempty"`
 }
-
-type TunnelStatusReason string
-
-const (
-	TunnelStatusReasonNoSuchProxy    TunnelStatusReason = "NoSuchProxy"
-	TunnelStatusReasonWaitForProxy   TunnelStatusReason = "WaitForProxy"
-	TunnelStatusReasonServiceFailure TunnelStatusReason = "ServiceFailure"
-)
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
