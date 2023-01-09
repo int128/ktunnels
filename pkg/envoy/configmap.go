@@ -23,11 +23,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-const (
-	adminClusterName  = "internal-envoy-admin"
-	adminListenerName = "internal-envoy-admin"
-)
-
 func NewConfigMap(key types.NamespacedName, tunnels []*ktunnelsv1.Tunnel) (corev1.ConfigMap, error) {
 	bootstrap, err := generateBootstrap()
 	if err != nil {
@@ -160,46 +155,6 @@ func generateCDS(tunnels []*ktunnelsv1.Tunnel) (string, error) {
 	return string(b), nil
 }
 
-func createAdminCluster() (*anypb.Any, error) {
-	admin, err := anypb.New(&clusterv3.Cluster{
-		Name:           adminClusterName,
-		ConnectTimeout: durationpb.New(30 * time.Second),
-		ClusterDiscoveryType: &clusterv3.Cluster_Type{
-			Type: clusterv3.Cluster_LOGICAL_DNS,
-		},
-		DnsLookupFamily: clusterv3.Cluster_V4_ONLY,
-		LoadAssignment: &endpointv3.ClusterLoadAssignment{
-			ClusterName: adminClusterName,
-			Endpoints: []*endpointv3.LocalityLbEndpoints{
-				{
-					LbEndpoints: []*endpointv3.LbEndpoint{
-						{
-							HostIdentifier: &endpointv3.LbEndpoint_Endpoint{
-								Endpoint: &endpointv3.Endpoint{
-									Address: &corev3.Address{
-										Address: &corev3.Address_SocketAddress{
-											SocketAddress: &corev3.SocketAddress{
-												Address: "127.0.0.1",
-												PortSpecifier: &corev3.SocketAddress_PortValue{
-													PortValue: 19901,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	})
-	if err != nil {
-		return nil, fmt.Errorf("anypb.New(clusterv3.Cluster): %w", err)
-	}
-	return admin, nil
-}
-
 func generateLDS(tunnels []*ktunnelsv1.Tunnel) (string, error) {
 	var resources []*anypb.Any
 	for _, tunnel := range tunnels {
@@ -257,6 +212,51 @@ func generateLDS(tunnels []*ktunnelsv1.Tunnel) (string, error) {
 	return string(b), nil
 }
 
+const (
+	adminClusterName  = "admin_proxy"
+	adminListenerName = "admin_proxy"
+)
+
+func createAdminCluster() (*anypb.Any, error) {
+	admin, err := anypb.New(&clusterv3.Cluster{
+		Name:           adminClusterName,
+		ConnectTimeout: durationpb.New(30 * time.Second),
+		ClusterDiscoveryType: &clusterv3.Cluster_Type{
+			Type: clusterv3.Cluster_LOGICAL_DNS,
+		},
+		DnsLookupFamily: clusterv3.Cluster_V4_ONLY,
+		LoadAssignment: &endpointv3.ClusterLoadAssignment{
+			ClusterName: adminClusterName,
+			Endpoints: []*endpointv3.LocalityLbEndpoints{
+				{
+					LbEndpoints: []*endpointv3.LbEndpoint{
+						{
+							HostIdentifier: &endpointv3.LbEndpoint_Endpoint{
+								Endpoint: &endpointv3.Endpoint{
+									Address: &corev3.Address{
+										Address: &corev3.Address_SocketAddress{
+											SocketAddress: &corev3.SocketAddress{
+												Address: "127.0.0.1",
+												PortSpecifier: &corev3.SocketAddress_PortValue{
+													PortValue: 19901,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("anypb.New(clusterv3.Cluster): %w", err)
+	}
+	return admin, nil
+}
+
 func createAdminListener() (*anypb.Any, error) {
 	router, err := anypb.New(&routerv3.Router{})
 	if err != nil {
@@ -264,7 +264,7 @@ func createAdminListener() (*anypb.Any, error) {
 	}
 
 	manager, err := anypb.New(&http_connection_managerv3.HttpConnectionManager{
-		StatPrefix: "envoy_admin",
+		StatPrefix: "admin_proxy",
 		HttpFilters: []*http_connection_managerv3.HttpFilter{
 			{
 				Name:       "envoy.filters.http.router",
