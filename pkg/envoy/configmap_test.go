@@ -40,13 +40,15 @@ func Test_generateCDS(t *testing.T) {
 	if err := json.NewDecoder(strings.NewReader(cds)).Decode(&cdsValue); err != nil {
 		t.Fatalf("unable to decode CDS json: %s", err)
 	}
-	if len(cdsValue.Resources) != 1 {
-		t.Errorf("len(resources) wants 1 but got %d", len(cdsValue.Resources))
+	if len(cdsValue.Resources) != 2 {
+		t.Errorf("len(resources) wants 2 but got %d", len(cdsValue.Resources))
 	}
 	want := "type.googleapis.com/envoy.config.cluster.v3.Cluster"
-	got := cdsValue.Resources[0].Type
-	if want != got {
-		t.Errorf("resources.@type wants %s but got %s", want, got)
+	if got := cdsValue.Resources[0].Type; want != got {
+		t.Errorf("resources[0].@type wants %s but got %s", want, got)
+	}
+	if got := cdsValue.Resources[1].Type; want != got {
+		t.Errorf("resources[1].@type wants %s but got %s", want, got)
 	}
 }
 
@@ -76,12 +78,14 @@ func Test_generateLDS(t *testing.T) {
 	if err := json.NewDecoder(strings.NewReader(lds)).Decode(&ldsValue); err != nil {
 		t.Fatalf("unable to decode LDS json: %s", err)
 	}
-	if len(ldsValue.Resources) != 1 {
-		t.Errorf("len(resources) wants 1 but got %d", len(ldsValue.Resources))
+	if len(ldsValue.Resources) != 2 {
+		t.Errorf("len(resources) wants 2 but got %d", len(ldsValue.Resources))
 	}
 	want := "type.googleapis.com/envoy.config.listener.v3.Listener"
-	got := ldsValue.Resources[0].Type
-	if want != got {
-		t.Errorf("resources.@type wants %s but got %s", want, got)
+	if got := ldsValue.Resources[0].Type; want != got {
+		t.Errorf("resources[0].@type wants %s but got %s", want, got)
+	}
+	if got := ldsValue.Resources[1].Type; want != got {
+		t.Errorf("resources[1].@type wants %s but got %s", want, got)
 	}
 }
