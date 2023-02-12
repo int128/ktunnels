@@ -2,10 +2,13 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "github>int128/renovate-base",
-    "github>int128/go-actions",
+    "github>int128/go-renovate-config",
+    "github>int128/go-renovate-config:kubernetes",
+    "github>int128/go-renovate-config:doc-github-releases",
   ],
   "regexManagers": [
     {
+      "description": "Update envoy version",
       "fileMatch": [
         "^pkg/envoy/.+\\.go$",
       ],
@@ -13,15 +16,6 @@
         "\"(?<depName>.*?):(?<currentValue>.*)\" // renovate: docker\\s",
       ],
       "datasourceTemplate": "docker",
-    },
-    {
-      "fileMatch": [
-        "^README\\.md$",
-      ],
-      "matchStrings": [
-        "https://github.com/(?<depName>.*?)/releases/download/(?<currentValue>[^/]+)/",
-      ],
-      "datasourceTemplate": "github-releases",
     },
   ]
 }
