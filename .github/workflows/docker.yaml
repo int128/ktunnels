@@ -10,8 +10,7 @@ on:
       - go.*
       - main.go
       - api/**
-      - controllers/**
-      - pkg/**
+      - internal/**
       - config/**
     tags:
       - v*
@@ -22,8 +21,7 @@ on:
       - go.*
       - main.go
       - api/**
-      - controllers/**
-      - pkg/**
+      - internal/**
       - config/**
 
 jobs:

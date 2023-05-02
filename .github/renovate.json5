@@ -11,7 +11,7 @@
     {
       "description": "Update envoy version",
       "fileMatch": [
-        "^pkg/envoy/.+\\.go$",
+        "^internal/envoy/.+\\.go$",
       ],
       "matchStrings": [
         "\"(?<depName>.*?):(?<currentValue>.*)\" // renovate: docker\\s",
