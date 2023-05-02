@@ -5,7 +5,7 @@ import (
 	"time"
 
 	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
-	"github.com/int128/ktunnels/pkg/envoy"
+	"github.com/int128/ktunnels/internal/envoy"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"

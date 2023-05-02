@@ -20,8 +20,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/int128/ktunnels/pkg/envoy"
-	"github.com/int128/ktunnels/pkg/transit"
+	"github.com/int128/ktunnels/internal/envoy"
+	"github.com/int128/ktunnels/internal/transit"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
