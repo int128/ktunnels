@@ -32,7 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
-	"github.com/int128/ktunnels/controllers"
+	"github.com/int128/ktunnels/internal/controller"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -89,14 +89,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.ProxyReconciler{
+	if err = (&controller.ProxyReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Proxy")
 		os.Exit(1)
 	}
-	if err = (&controllers.TunnelReconciler{
+	if err = (&controller.TunnelReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
