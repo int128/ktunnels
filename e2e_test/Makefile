@@ -18,7 +18,7 @@ deploy:
 	kustomize build controller | kubectl apply -f -
 	kubectl -n ktunnels-system rollout status deployment ktunnels-controller-manager
 	kubectl -n ktunnels-system get deployment
-	kubectl apply -f ../config/samples
+	kustomize build ../config/samples | kubectl apply -f -
 	kubectl get proxy
 	kubectl get tunnel
 
