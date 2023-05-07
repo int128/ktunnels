@@ -8,10 +8,10 @@ on:
       - .github/workflows/docker.yaml
       - Dockerfile
       - go.*
-      - main.go
       - api/**
       - internal/**
       - config/**
+      - e2e_test/**
     tags:
       - v*
   pull_request:
@@ -19,16 +19,16 @@ on:
       - .github/workflows/docker.yaml
       - Dockerfile
       - go.*
-      - main.go
       - api/**
       - internal/**
       - config/**
+      - e2e_test/**
 
 jobs:
   build:
     uses: int128/docker-build-workflow/.github/workflows/build.yaml@v1
 
-  test:
+  e2e-test:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
