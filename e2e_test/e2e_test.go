@@ -28,13 +28,15 @@ func Test(t *testing.T) {
 	})
 	wg.StartWithContext(ctx, func(ctx context.Context) {
 		defer cancel()
+		const endpoint = "http://localhost:10002/get"
 		if err := wait.PollUntilWithContext(ctx, 2*time.Second, func(ctx context.Context) (bool, error) {
-			if err := get(ctx, "http://localhost:10002/get"); err != nil {
-				return false, err
+			if err := httpGet(ctx, endpoint); err != nil {
+				t.Logf("retrying: %s", err)
+				return false, nil
 			}
 			return true, nil
 		}); err != nil {
-			t.Errorf("get error: %s", err)
+			t.Errorf("endpoint %s did not become success: %s", endpoint, err)
 		}
 	})
 	wg.Wait()
@@ -57,7 +59,7 @@ func runKubectl(ctx context.Context, args ...string) error {
 	return nil
 }
 
-func get(ctx context.Context, url string) error {
+func httpGet(ctx context.Context, url string) error {
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("could not create a request: %w", err)
