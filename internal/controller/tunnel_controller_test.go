@@ -138,8 +138,11 @@ var _ = Describe("Tunnel controller", func() {
 			}).Should(Succeed())
 
 			By("Verifying the service does not exist")
-			err := k8sClient.Get(ctx, svcKey, &svc)
-			Expect(errors.IsNotFound(err)).Should(BeTrue())
+			Eventually(func(g Gomega) {
+				err := k8sClient.Get(ctx, svcKey, &svc)
+				reason := errors.ReasonForError(err)
+				g.Expect(reason).Should(Equal(metav1.StatusReasonNotFound))
+			}).Should(Succeed())
 		}, SpecTimeout(3*time.Second))
 	})
 })
