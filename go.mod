@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/envoyproxy/go-control-plane v0.11.1
-	github.com/google/go-cmp v0.5.9
+	github.com/google/go-cmp v0.6.0
 	github.com/onsi/ginkgo/v2 v2.13.0
 	github.com/onsi/gomega v1.28.0
 	google.golang.org/protobuf v1.31.0
