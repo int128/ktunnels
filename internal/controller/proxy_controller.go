@@ -25,17 +25,15 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	crlog "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
-
-	"k8s.io/apimachinery/pkg/runtime"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	crlog "sigs.k8s.io/controller-runtime/pkg/log"
 
 	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
 )
@@ -233,7 +231,7 @@ func (r *ProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(
 			// watch tunnel(s) of a proxy
 			// https://book.kubebuilder.io/reference/watching-resources/externally-managed.html
-			&source.Kind{Type: &ktunnelsv1.Tunnel{}},
+			&ktunnelsv1.Tunnel{},
 			handler.EnqueueRequestsFromMapFunc(mapTunnelToReconcileRequest),
 			builder.WithPredicates(predicate.ResourceVersionChangedPredicate{}),
 		).
@@ -248,7 +246,7 @@ func mapTunnelToProxyName(obj client.Object) []string {
 	return []string{tunnel.Spec.Proxy.Name}
 }
 
-func mapTunnelToReconcileRequest(obj client.Object) []reconcile.Request {
+func mapTunnelToReconcileRequest(_ context.Context, obj client.Object) []reconcile.Request {
 	tunnel, ok := obj.(*ktunnelsv1.Tunnel)
 	if !ok {
 		return nil

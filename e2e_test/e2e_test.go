@@ -29,7 +29,7 @@ func Test(t *testing.T) {
 	wg.StartWithContext(ctx, func(ctx context.Context) {
 		defer cancel()
 		const endpoint = "http://localhost:10002/get"
-		if err := wait.PollUntilWithContext(ctx, 2*time.Second, func(ctx context.Context) (bool, error) {
+		if err := wait.PollUntilContextCancel(ctx, 2*time.Second, true, func(ctx context.Context) (bool, error) {
 			if err := httpGet(ctx, endpoint); err != nil {
 				t.Logf("retrying: %s", err)
 				return false, nil
