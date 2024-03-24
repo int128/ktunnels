@@ -7,7 +7,7 @@ toolchain go1.22.1
 require (
 	github.com/envoyproxy/go-control-plane v0.12.0
 	github.com/google/go-cmp v0.6.0
-	github.com/onsi/ginkgo/v2 v2.17.0
+	github.com/onsi/ginkgo/v2 v2.17.1
 	github.com/onsi/gomega v1.32.0
 	google.golang.org/protobuf v1.33.0
 	k8s.io/api v0.29.0
