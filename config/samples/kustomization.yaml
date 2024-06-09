@@ -2,4 +2,4 @@
 resources:
 - ktunnels_v1_proxy.yaml
 - ktunnels_v1_tunnel.yaml
-#+kubebuilder:scaffold:manifestskustomizesamples
+# +kubebuilder:scaffold:manifestskustomizesamples
