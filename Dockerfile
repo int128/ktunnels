@@ -1,7 +1,5 @@
 # Build the manager binary
-FROM golang:1.22 as builder
-ARG TARGETOS
-ARG TARGETARCH
+FROM --platform=$BUILDPLATFORM golang:1.22 as builder
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
@@ -16,6 +14,9 @@ COPY cmd/main.go cmd/main.go
 COPY api/ api/
 COPY internal/ internal/
 
+ARG TARGETOS
+ARG TARGETARCH
+
 # Build
 # the GOARCH has not a default value to allow the binary be built according to the host where the command
 # was called. For example, if we call make docker-build in a local env which has the Apple Silicon M1 SO
@@ -25,7 +26,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o ma
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
-FROM gcr.io/distroless/static:nonroot
+FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /
 COPY --from=builder /workspace/manager .
 USER 65532:65532
