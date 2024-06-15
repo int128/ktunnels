@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"k8s.io/utils/ptr"
 	"time"
 
 	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
@@ -13,7 +14,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -67,7 +67,7 @@ var _ = Describe("Proxy controller", func() {
 				VolumeSource: corev1.VolumeSource{
 					ConfigMap: &corev1.ConfigMapVolumeSource{
 						LocalObjectReference: corev1.LocalObjectReference{Name: "ktunnels-proxy-" + proxy.Name},
-						DefaultMode:          pointer.Int32(420),
+						DefaultMode:          ptr.To[int32](420),
 					},
 				},
 			}))

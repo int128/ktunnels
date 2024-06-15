@@ -1,6 +1,7 @@
 package envoy
 
 import (
+	"k8s.io/utils/ptr"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -11,7 +12,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/pointer"
 )
 
 func TestNewDeployment(t *testing.T) {
@@ -78,7 +78,7 @@ func TestNewDeployment(t *testing.T) {
 									InitialDelaySeconds: 1,
 								},
 								SecurityContext: &corev1.SecurityContext{
-									AllowPrivilegeEscalation: pointer.Bool(false),
+									AllowPrivilegeEscalation: ptr.To(false),
 								},
 								VolumeMounts: []corev1.VolumeMount{
 									{
@@ -118,12 +118,12 @@ func TestNewDeployment(t *testing.T) {
 					Name:      "example",
 				},
 				Spec: ktunnelsv1.ProxySpec{
-					Replicas: pointer.Int32(2),
+					Replicas: ptr.To[int32](2),
 					Template: ktunnelsv1.ProxyPod{
 						Spec: ktunnelsv1.ProxyPodSpec{
 							ImagePullSecrets: []corev1.LocalObjectReference{{Name: "docker-hub"}},
 							Envoy: ktunnelsv1.ProxyEnvoy{
-								Image: pointer.String("1234567890.dkr.ecr.us-east-1.amazonaws.com/envoy:v9.99"),
+								Image: ptr.To("1234567890.dkr.ecr.us-east-1.amazonaws.com/envoy:v9.99"),
 								Resources: &corev1.ResourceRequirements{
 									Requests: corev1.ResourceList{
 										corev1.ResourceCPU:    resource.MustParse("100m"),
@@ -145,7 +145,7 @@ func TestNewDeployment(t *testing.T) {
 				Name:      "ktunnels-proxy-example",
 			},
 			Spec: appsv1.DeploymentSpec{
-				Replicas: pointer.Int32(2),
+				Replicas: ptr.To[int32](2),
 				Selector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						PodLabelKeyOfProxy: "example",
@@ -173,7 +173,7 @@ func TestNewDeployment(t *testing.T) {
 									},
 								},
 								SecurityContext: &corev1.SecurityContext{
-									AllowPrivilegeEscalation: pointer.Bool(false),
+									AllowPrivilegeEscalation: ptr.To(false),
 								},
 								Ports: []corev1.ContainerPort{
 									{
