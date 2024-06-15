@@ -8,7 +8,7 @@ import (
 	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 type discoveryResponseType struct {
@@ -65,7 +65,7 @@ func Test_generateLDS(t *testing.T) {
 				Proxy: corev1.LocalObjectReference{Name: "example"},
 			},
 			Status: ktunnelsv1.TunnelStatus{
-				TransitPort: pointer.Int32(30000),
+				TransitPort: ptr.To[int32](30000),
 			},
 		},
 	})

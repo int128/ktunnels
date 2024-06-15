@@ -1,12 +1,12 @@
 package transit
 
 import (
+	"k8s.io/utils/ptr"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/utils/pointer"
 )
 
 func Test_allocatePort(t *testing.T) {
@@ -32,7 +32,7 @@ func Test_allocatePort(t *testing.T) {
 					Proxy: corev1.LocalObjectReference{Name: "bar"},
 				},
 				Status: ktunnelsv1.TunnelStatus{
-					TransitPort: pointer.Int32(200),
+					TransitPort: ptr.To[int32](200),
 				},
 			},
 		})
@@ -49,7 +49,7 @@ func Test_allocatePort(t *testing.T) {
 					Proxy: corev1.LocalObjectReference{Name: "bar1"},
 				},
 				Status: ktunnelsv1.TunnelStatus{
-					TransitPort: pointer.Int32(1000),
+					TransitPort: ptr.To[int32](1000),
 				},
 			},
 			{
@@ -59,7 +59,7 @@ func Test_allocatePort(t *testing.T) {
 					Proxy: corev1.LocalObjectReference{Name: "bar2"},
 				},
 				Status: ktunnelsv1.TunnelStatus{
-					TransitPort: pointer.Int32(2000),
+					TransitPort: ptr.To[int32](2000),
 				},
 			},
 		})
@@ -85,7 +85,7 @@ func Test_allocatePort(t *testing.T) {
 					Proxy: corev1.LocalObjectReference{Name: "bar2"},
 				},
 				Status: ktunnelsv1.TunnelStatus{
-					TransitPort: pointer.Int32(2000),
+					TransitPort: ptr.To[int32](2000),
 				},
 			},
 		}, mockIntn)
@@ -97,7 +97,7 @@ func Test_allocatePort(t *testing.T) {
 					Proxy: corev1.LocalObjectReference{Name: "bar1"},
 				},
 				Status: ktunnelsv1.TunnelStatus{
-					TransitPort: pointer.Int32(22345),
+					TransitPort: ptr.To[int32](22345),
 				},
 			},
 		}
@@ -116,7 +116,7 @@ func Test_allocatePort(t *testing.T) {
 					Proxy: corev1.LocalObjectReference{Name: "bar1"},
 				},
 				Status: ktunnelsv1.TunnelStatus{
-					TransitPort: pointer.Int32(1000),
+					TransitPort: ptr.To[int32](1000),
 				},
 			},
 			{
@@ -135,7 +135,7 @@ func Test_allocatePort(t *testing.T) {
 					Proxy: corev1.LocalObjectReference{Name: "bar2"},
 				},
 				Status: ktunnelsv1.TunnelStatus{
-					TransitPort: pointer.Int32(22345),
+					TransitPort: ptr.To[int32](22345),
 				},
 			},
 		}
@@ -172,7 +172,7 @@ func Test_allocatePort(t *testing.T) {
 					Proxy: corev1.LocalObjectReference{Name: "bar1"},
 				},
 				Status: ktunnelsv1.TunnelStatus{
-					TransitPort: pointer.Int32(22346),
+					TransitPort: ptr.To[int32](22346),
 				},
 			},
 			{
@@ -182,7 +182,7 @@ func Test_allocatePort(t *testing.T) {
 					Proxy: corev1.LocalObjectReference{Name: "bar2"},
 				},
 				Status: ktunnelsv1.TunnelStatus{
-					TransitPort: pointer.Int32(22347),
+					TransitPort: ptr.To[int32](22347),
 				},
 			},
 		}
