@@ -26,7 +26,7 @@ on:
 
 jobs:
   build:
-    uses: int128/docker-build-workflow/.github/workflows/build.yaml@v1
+    uses: int128/docker-build-workflow/.github/workflows/build.yaml@c355cd620f7e7bfb34f7ee37cb3adcd3aded8b6c # v1
     with:
       platforms: linux/amd64,linux/arm64
 
@@ -34,20 +34,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
           go-version: 1.22.4
 
       - run: make -C e2e_test cluster
 
-      - uses: docker/metadata-action@v5
+      - uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5.5.1
         id: metadata
         with:
           images: ghcr.io/${{ github.repository }}
           # set outputs.tags to single tag
           flavor: latest=false
-      - uses: int128/wait-for-docker-image-action@v1
+      - uses: int128/wait-for-docker-image-action@4975bd239c55b16ec86bbcca9cab53ac056f8e07 # v1.8.0
         with:
           tags: ${{ steps.metadata.outputs.tags }}
 

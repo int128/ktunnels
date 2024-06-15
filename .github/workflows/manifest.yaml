@@ -8,4 +8,4 @@ on:
 
 jobs:
   manifest:
-    uses: int128/kubebuilder-workflows/.github/workflows/manifest.yaml@v1
+    uses: int128/kubebuilder-workflows/.github/workflows/manifest.yaml@96546ff45434040af88e8a5280e49609d4796ff4 # v1
