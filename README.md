@@ -22,7 +22,7 @@ You no longer maintain your bastion servers.
 Deploy the controller.
 
 ```sh
-kubectl apply -f https://github.com/int128/ktunnels/releases/download/v0.7.0/ktunnels.yaml
+kubectl apply -f https://github.com/int128/ktunnels/releases/download/v0.8.0/ktunnels.yaml
 ```
 
 ### For user
