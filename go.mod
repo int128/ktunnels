@@ -13,7 +13,7 @@ require (
 	k8s.io/api v0.30.0
 	k8s.io/apimachinery v0.30.0
 	k8s.io/client-go v0.30.0
-	k8s.io/utils v0.0.0-20240502163921-fe8a2dddb1d0
+	k8s.io/utils v0.0.0-20240710235135-d4aae2beeffc
 	sigs.k8s.io/controller-runtime v0.18.2
 )
 
