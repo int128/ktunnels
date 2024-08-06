@@ -2,7 +2,7 @@ module github.com/int128/ktunnels
 
 go 1.22.0
 
-toolchain go1.22.5
+toolchain go1.22.6
 
 require (
 	github.com/envoyproxy/go-control-plane v0.12.0
