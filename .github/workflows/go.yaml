@@ -21,4 +21,4 @@ jobs:
     uses: int128/kubebuilder-workflows/.github/workflows/go.yaml@96546ff45434040af88e8a5280e49609d4796ff4 # v1
     with:
       go-version: 1.23.0
-      golangci-lint-version: v1.60.1
+      golangci-lint-version: v1.60.2
