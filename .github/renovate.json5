@@ -8,8 +8,9 @@
     "github>int128/go-renovate-config:doc-github-releases#v1.4.1",
     "helpers:pinGitHubActionDigests",
   ],
-  "regexManagers": [
+  "customManagers": [
     {
+      "customType": "regex",
       "description": "Update envoy version",
       "fileMatch": [
         "^internal/envoy/.+\\.go$",
