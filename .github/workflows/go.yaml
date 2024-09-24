@@ -18,7 +18,11 @@ on:
 
 jobs:
   go:
-    uses: int128/kubebuilder-workflows/.github/workflows/go.yaml@96546ff45434040af88e8a5280e49609d4796ff4 # v1
+    uses: int128/kubebuilder-workflows/.github/workflows/go.yaml@2633a4ca6bb509450027b05116f07bb9da55e57f # v1.1.0
+    permissions:
+      contents: write
+      pull-requests: write
     with:
-      go-version: 1.23.1
+      go-version-file: go.mod
+      cache-dependency-path: go.sum
       golangci-lint-version: v1.61.0
