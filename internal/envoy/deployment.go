@@ -33,7 +33,7 @@ func NewDeployment(key types.NamespacedName, proxy ktunnelsv1.Proxy) appsv1.Depl
 					},
 				},
 				Spec: corev1.PodSpec{
-					NodeSelector: proxy.NodeSelector,
+					NodeSelector: proxy.Spec.Template.Spec.NodeSelector,
 					Containers: []corev1.Container{
 						{
 							Name: "envoy",
