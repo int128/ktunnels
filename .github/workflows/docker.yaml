@@ -26,7 +26,7 @@ on:
 
 jobs:
   build:
-    uses: int128/docker-build-workflow/.github/workflows/build.yaml@c355cd620f7e7bfb34f7ee37cb3adcd3aded8b6c # v1
+    uses: int128/docker-build-workflow/.github/workflows/build.yaml@13aba0bec24632a9fda61ce0d5252574040ed47a # v1.3.0
     with:
       platforms: linux/amd64,linux/arm64
 
