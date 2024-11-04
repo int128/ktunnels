@@ -5,9 +5,10 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - apps
+  - ""
   resources:
-  - deployments
+  - configmaps
+  - services
   verbs:
   - create
   - delete
@@ -17,10 +18,9 @@ rules:
   - update
   - watch
 - apiGroups:
-  - ""
+  - apps
   resources:
-  - configmaps
-  - services
+  - deployments
   verbs:
   - create
   - delete
