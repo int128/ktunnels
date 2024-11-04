@@ -20,17 +20,6 @@ rules:
   - ""
   resources:
   - configmaps
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
   - services
   verbs:
   - create
@@ -44,31 +33,6 @@ rules:
   - ktunnels.int128.github.io
   resources:
   - proxies
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ktunnels.int128.github.io
-  resources:
-  - proxies/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - ktunnels.int128.github.io
-  resources:
-  - proxies/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - ktunnels.int128.github.io
-  resources:
   - tunnels
   verbs:
   - create
@@ -81,12 +45,14 @@ rules:
 - apiGroups:
   - ktunnels.int128.github.io
   resources:
+  - proxies/finalizers
   - tunnels/finalizers
   verbs:
   - update
 - apiGroups:
   - ktunnels.int128.github.io
   resources:
+  - proxies/status
   - tunnels/status
   verbs:
   - get
