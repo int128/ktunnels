@@ -142,6 +142,10 @@ spec:
                           type: object
                           x-kubernetes-map-type: atomic
                         type: array
+                      nodeSelector:
+                        additionalProperties:
+                          type: string
+                        type: object
                     type: object
                 type: object
             type: object
