@@ -43,6 +43,7 @@ type ProxyPodSpec struct {
 
 	// +optional
 	Envoy ProxyEnvoy `json:"envoy,omitempty"`
+	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 }
 
 // ProxyEnvoy defines the desired state of an Envoy container
