@@ -42,7 +42,7 @@ type ProxyPodSpec struct {
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 
 	// +optional
-	Envoy ProxyEnvoy `json:"envoy,omitempty"`
+	Envoy        ProxyEnvoy        `json:"envoy,omitempty"`
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 }
 
