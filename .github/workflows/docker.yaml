@@ -9,6 +9,7 @@ on:
       - Dockerfile
       - go.*
       - api/**
+      - cmd/**
       - internal/**
       - config/**
       - e2e_test/**
@@ -20,6 +21,7 @@ on:
       - Dockerfile
       - go.*
       - api/**
+      - cmd/**
       - internal/**
       - config/**
       - e2e_test/**
@@ -32,7 +34,7 @@ jobs:
       contents: read
       packages: write
     outputs:
-      image-uri: ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}
+      image-uri: ${{ steps.build-metadata.outputs.image-uri }}
     steps:
       - uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
@@ -60,6 +62,18 @@ jobs:
           platforms: |
             linux/amd64
             linux/arm64
+      - uses: int128/docker-build-metadata-action@v0.1.0
+        id: build-metadata
+        with:
+          metadata: ${{ steps.build.outputs.metadata }}
+
+  manifest:
+    needs: build
+    uses: int128/kubebuilder-workflows/.github/workflows/release.yaml@e4ad31a438f188f70bde87827a8dbe466e623dea # v1.5.0
+    permissions:
+      contents: write
+    with:
+      controller-image: ${{ needs.build.outputs.image-uri }}
 
   e2e-test:
     runs-on: ubuntu-latest
