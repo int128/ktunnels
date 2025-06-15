@@ -30,7 +30,7 @@ func Test(t *testing.T) {
 		defer cancel()
 		const endpoint = "http://localhost:10002/get"
 		if err := wait.PollUntilContextCancel(ctx, 2*time.Second, true, func(ctx context.Context) (bool, error) {
-			if err := httpGet(ctx, endpoint); err != nil {
+			if err := httpGet(t, ctx, endpoint); err != nil {
 				t.Logf("retrying: %s", err)
 				return false, nil
 			}
@@ -59,7 +59,7 @@ func runKubectl(ctx context.Context, args ...string) error {
 	return nil
 }
 
-func httpGet(ctx context.Context, url string) error {
+func httpGet(t *testing.T, ctx context.Context, url string) error {
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("could not create a request: %w", err)
@@ -68,7 +68,11 @@ func httpGet(ctx context.Context, url string) error {
 	if err != nil {
 		return fmt.Errorf("http error: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Logf("could not close response body: %s", err)
+		}
+	}()
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("status code wants 200 but was %d", resp.StatusCode)
 	}
