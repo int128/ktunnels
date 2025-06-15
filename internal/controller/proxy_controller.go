@@ -70,7 +70,7 @@ func (r *ProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	var tunnelList ktunnelsv1.TunnelList
 	if err := r.List(ctx, &tunnelList,
-		client.InNamespace(proxy.ObjectMeta.Namespace),
+		client.InNamespace(proxy.Namespace),
 		client.MatchingFields{proxyNameKey: proxy.Name},
 	); err != nil {
 		log.Error(err, "unable to fetch tunnels")
