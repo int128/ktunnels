@@ -17,11 +17,31 @@ on:
       - Makefile
 
 jobs:
-  go:
-    uses: int128/kubebuilder-workflows/.github/workflows/go.yaml@e4ad31a438f188f70bde87827a8dbe466e623dea # v1.5.0
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - run: make test
+      - run: make lint
+
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
       pull-requests: write
-    with:
-      go-version-file: go.mod
-      cache-dependency-path: go.sum
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - run: go mod tidy
+      - run: make fmt
+      - run: make generate manifests
+      - uses: int128/update-generated-files-action@65b9a7ae3ededc5679d78343f58fbebcf1ebd785 # v2.57.0

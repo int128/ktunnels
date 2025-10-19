@@ -1,33 +1,39 @@
-name: docker
+name: build
 
 on:
+  pull_request:
+    paths:
+      - .github/workflows/build.yaml
+      - Dockerfile
+      - Makefile
+      - go.*
+      - api/**
+      - cmd/**
+      - internal/**
+      - config/**
+      - e2e_test/**
+      - '!**/*_test.go'
+      - '!**/*.md'
   push:
     branches:
       - main
-    paths:
-      - .github/workflows/docker.yaml
-      - Dockerfile
-      - go.*
-      - api/**
-      - cmd/**
-      - internal/**
-      - config/**
-      - e2e_test/**
     tags:
       - v*
-  pull_request:
     paths:
-      - .github/workflows/docker.yaml
+      - .github/workflows/build.yaml
       - Dockerfile
+      - Makefile
       - go.*
       - api/**
       - cmd/**
       - internal/**
       - config/**
       - e2e_test/**
+      - '!**/*_test.go'
+      - '!**/*.md'
 
 jobs:
-  build:
+  container:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -36,11 +42,6 @@ jobs:
     outputs:
       image-uri: ${{ steps.build-metadata.outputs.image-uri }}
     steps:
-      - uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
         id: metadata
         with:
@@ -49,7 +50,11 @@ jobs:
         id: cache
         with:
           image: ghcr.io/${{ github.repository }}/cache
-      - uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
+      - uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
       - uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         id: build
@@ -68,30 +73,40 @@ jobs:
           metadata: ${{ steps.build.outputs.metadata }}
 
   manifest:
-    needs: build
-    uses: int128/kubebuilder-workflows/.github/workflows/release.yaml@e4ad31a438f188f70bde87827a8dbe466e623dea # v1.5.0
+    needs: container
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
-    with:
-      controller-image: ${{ needs.build.outputs.image-uri }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - run: kustomize edit set image controller="$controller_image"
+        working-directory: config/manager
+        env:
+          controller_image: ${{ needs.container.outputs.image-uri }}
+      - run: kustomize build config/default > "${RUNNER_TEMP}/${GITHUB_REPOSITORY##*/}.yaml"
+      - run: cat "${RUNNER_TEMP}/${GITHUB_REPOSITORY##*/}.yaml"
+      - if: github.ref_type == 'tag'
+        run: gh release upload "$GITHUB_REF_NAME" "${RUNNER_TEMP}/${GITHUB_REPOSITORY##*/}.yaml" --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   e2e-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
-
       - run: make -C e2e_test cluster
 
       - uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
         id: metadata
         with:
           images: ghcr.io/${{ github.repository }}
-          # set outputs.tags to single tag
+          # Retrieve single tag
           flavor: latest=false
       - uses: int128/wait-for-docker-image-action@4975bd239c55b16ec86bbcca9cab53ac056f8e07 # v1.8.0
         with:
