@@ -44,4 +44,4 @@ jobs:
       - run: go mod tidy
       - run: make fmt
       - run: make generate manifests
-      - uses: int128/update-generated-files-action@57b7ce80d0aca361f4dc61f09717043daa7d0956 # v2.65.0
+      - uses: int128/update-generated-files-action@d9aac571db84cee6c16fa20190621e9deb2bc575 # v2.67.0
