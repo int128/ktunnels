@@ -48,5 +48,5 @@ jobs:
         with:
           update-if-exists: replace
           post: |
-            ## kustomize diff
-            ${{ steps.diff.outputs.comment-body || 'No diff.' }}
+            ## ${{ github.workflow }} / ${{ github.job }}
+            ${{ steps.diff.outputs.comment-body || 'No diff' }}
