@@ -49,4 +49,4 @@ jobs:
           update-if-exists: replace
           post: |
             ## kustomize diff
-            ${{ steps.diff.outputs.comment-body }}
+            ${{ steps.diff.outputs.comment-body || 'No diff.' }}
