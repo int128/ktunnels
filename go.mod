@@ -1,6 +1,6 @@
 module github.com/int128/ktunnels
 
-go 1.25.3
+go 1.25.4
 
 require (
 	github.com/envoyproxy/go-control-plane/envoy v1.36.0
