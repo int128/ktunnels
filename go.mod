@@ -5,7 +5,7 @@ go 1.25.6
 require (
 	github.com/envoyproxy/go-control-plane/envoy v1.36.0
 	github.com/google/go-cmp v0.7.0
-	github.com/onsi/ginkgo/v2 v2.28.0
+	github.com/onsi/ginkgo/v2 v2.28.1
 	github.com/onsi/gomega v1.39.1
 	google.golang.org/protobuf v1.36.11
 	k8s.io/api v0.35.0
