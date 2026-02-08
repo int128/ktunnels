@@ -46,7 +46,7 @@ jobs:
         id: metadata
         with:
           images: ghcr.io/${{ github.repository }}
-      - uses: int128/docker-build-cache-config-action@6f35e569a326eea3621c1f4422031b047a535e4a # v1.44.0
+      - uses: int128/docker-build-cache-config-action@60597e52c330c43c4a39938f4be67bf931d4e9e3 # v1.46.0
         id: cache
         with:
           image: ghcr.io/${{ github.repository }}/cache
