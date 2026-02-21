@@ -49,6 +49,7 @@ jobs:
       #   kubebuilder edit --plugins="autoupdate/v1-alpha" --use-gh-models
       - if: github.event_name == 'pull_request'
         run: |
+          git fetch origin refs/heads/main:refs/heads/main
           kubebuilder alpha update \
             --force \
             --restore-path .github/workflows
