@@ -51,8 +51,7 @@ jobs:
         run: |
           kubebuilder alpha update \
             --force \
-            --restore-path .github/workflows \
-            --open-gh-issue
+            --restore-path .github/workflows
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - if: github.event_name != 'pull_request'
