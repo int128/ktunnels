@@ -6,6 +6,8 @@ cliVersion: 4.8.0
 domain: int128.github.io
 layout:
 - go.kubebuilder.io/v4
+plugins:
+  autoupdate.kubebuilder.io/v1-alpha: {}
 projectName: ktunnels
 repo: github.com/int128/ktunnels
 resources:
