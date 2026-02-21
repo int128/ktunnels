@@ -156,8 +156,6 @@ spec:
                 description: Ready becomes true when the owned Deployment is ready
                 type: boolean
             type: object
-        required:
-        - spec
         type: object
     served: true
     storage: true
