@@ -78,8 +78,8 @@ type Proxy struct {
 	metav1.ObjectMeta `json:"metadata,omitzero"`
 
 	// spec defines the desired state of Proxy
-	// +required
-	Spec ProxySpec `json:"spec"`
+	// +optional
+	Spec ProxySpec `json:"spec,omitzero"`
 
 	// status defines the observed state of Proxy
 	// +optional

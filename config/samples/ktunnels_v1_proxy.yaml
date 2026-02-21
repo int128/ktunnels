@@ -2,4 +2,3 @@ apiVersion: ktunnels.int128.github.io/v1
 kind: Proxy
 metadata:
   name: default
-spec:
