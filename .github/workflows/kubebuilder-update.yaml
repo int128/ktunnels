@@ -1,12 +1,17 @@
 name: kubebuilder-update
 
 on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/kubebuilder-update.yaml
   workflow_dispatch:
   schedule:
     - cron: "0 0 * * 2" # Every Tuesday at 00:00 UTC
 
 jobs:
-  auto-update:
+  update:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -42,7 +47,16 @@ jobs:
       # To enable AI-generated summaries in GitHub issues, you need permissions to use GitHub Models.
       # If you have the required permissions, re-run:
       #   kubebuilder edit --plugins="autoupdate/v1-alpha" --use-gh-models
-      - run: |
+      - if: github.event_name == 'pull_request'
+        run: |
+          kubebuilder alpha update \
+            --force \
+            --restore-path .github/workflows \
+            --open-gh-issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - if: github.event_name != 'pull_request'
+        run: |
           kubebuilder alpha update \
             --force \
             --push \
