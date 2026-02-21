@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.18.0
+    controller-gen.kubebuilder.io/version: v0.20.1
   name: tunnels.ktunnels.int128.github.io
 spec:
   group: ktunnels.int128.github.io
@@ -50,7 +50,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: TunnelSpec defines the desired state of Tunnel
+            description: spec defines the desired state of Tunnel
             properties:
               host:
                 description: Destination hostname of this tunnel.
@@ -75,7 +75,7 @@ spec:
                 x-kubernetes-map-type: atomic
             type: object
           status:
-            description: TunnelStatus defines the observed state of Tunnel
+            description: status defines the observed state of Tunnel
             properties:
               ready:
                 description: True if the service is created.
@@ -87,6 +87,8 @@ spec:
                 format: int32
                 type: integer
             type: object
+        required:
+        - spec
         type: object
     served: true
     storage: true

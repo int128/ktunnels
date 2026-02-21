@@ -9,10 +9,8 @@ COPY go.sum go.sum
 # and so that source changes don't invalidate our downloaded layer
 RUN go mod download
 
-# Copy the go source
-COPY cmd/main.go cmd/main.go
-COPY api/ api/
-COPY internal/ internal/
+# Copy the Go source (relies on .dockerignore to filter)
+COPY . .
 
 ARG TARGETOS
 ARG TARGETARCH

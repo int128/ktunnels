@@ -71,11 +71,19 @@ type ProxyStatus struct {
 
 // Proxy is the Schema for the proxies API
 type Proxy struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.TypeMeta `json:",inline"`
 
-	Spec   ProxySpec   `json:"spec,omitempty"`
-	Status ProxyStatus `json:"status,omitempty"`
+	// metadata is a standard object metadata
+	// +optional
+	metav1.ObjectMeta `json:"metadata,omitzero"`
+
+	// spec defines the desired state of Proxy
+	// +optional
+	Spec ProxySpec `json:"spec,omitzero"`
+
+	// status defines the observed state of Proxy
+	// +optional
+	Status ProxyStatus `json:"status,omitzero"`
 }
 
 //+kubebuilder:object:root=true
@@ -83,7 +91,7 @@ type Proxy struct {
 // ProxyList contains a list of Proxy
 type ProxyList struct {
 	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
+	metav1.ListMeta `json:"metadata,omitzero"`
 	Items           []Proxy `json:"items"`
 }
 
