@@ -57,8 +57,22 @@ type Tunnel struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
+<<<<<<< HEAD
+	// metadata is a standard object metadata
+	// +optional
+	metav1.ObjectMeta `json:"metadata,omitzero"`
+
+	// spec defines the desired state of Tunnel
+	// +required
+	Spec TunnelSpec `json:"spec"`
+
+	// status defines the observed state of Tunnel
+	// +optional
+	Status TunnelStatus `json:"status,omitzero"`
+=======
 	Spec   TunnelSpec   `json:"spec,omitempty"`
 	Status TunnelStatus `json:"status,omitempty"`
+>>>>>>> tmp-original-21-02-26-14-49
 }
 
 //+kubebuilder:object:root=true
@@ -66,7 +80,7 @@ type Tunnel struct {
 // TunnelList contains a list of Tunnel
 type TunnelList struct {
 	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
+	metav1.ListMeta `json:"metadata,omitzero"`
 	Items           []Tunnel `json:"items"`
 }
 
