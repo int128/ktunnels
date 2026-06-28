@@ -18,7 +18,7 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           path: head
-      - uses: int128/kustomize-action@7d86348ef91fbfa4f2c6a34545cff94ea4a7724a # v1.187.0
+      - uses: int128/kustomize-action@6cb04b0da49fce7201ff08e086072f33475d376e # v1.188.0
         id: kustomize-head
         with:
           base-directory: head
@@ -30,7 +30,7 @@ jobs:
         with:
           ref: ${{ github.base_ref }}
           path: base
-      - uses: int128/kustomize-action@7d86348ef91fbfa4f2c6a34545cff94ea4a7724a # v1.187.0
+      - uses: int128/kustomize-action@6cb04b0da49fce7201ff08e086072f33475d376e # v1.188.0
         id: kustomize-base
         with:
           base-directory: base
