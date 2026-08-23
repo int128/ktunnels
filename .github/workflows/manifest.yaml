@@ -39,7 +39,7 @@ jobs:
           kustomization: |
             config/default/kustomization.yaml
 
-      - uses: int128/diff-action@782fb3df392fd583a5f9745afd19ade5f6529dd6 # v2.34.0
+      - uses: int128/diff-action@4ea4f95e4684b2c719b963eefd7ff4b76d06ff8b # v2.36.0
         id: diff
         with:
           base: ${{ steps.kustomize-base.outputs.directory }}
