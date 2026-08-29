@@ -109,7 +109,7 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           # Retrieve single tag
           flavor: latest=false
-      - uses: int128/wait-for-docker-image-action@89d78cacc6505c809e80a0cc12c0b4ff5bb4bf30 # v1.27.0
+      - uses: int128/wait-for-docker-image-action@e841a102242c0b64d307c5e3c832ceb1e392718f # v1.28.0
         with:
           tags: ${{ steps.metadata.outputs.tags }}
 
