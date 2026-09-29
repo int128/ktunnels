@@ -37,7 +37,7 @@ jobs:
       - run: git reset HEAD^
       - run: |
           git restore -s origin/main .github/workflows
-          git restore -s origin/main .golangci.*
+          git restore -s origin/main '.golangci.*'
           git restore -s origin/main README.md
           git restore -s origin/main AGENTS.md
           git restore -s origin/main .devcontainer
