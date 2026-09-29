@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 /*
 Copyright 2022.
 
@@ -14,11 +16,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+>>>>>>> tmp-original-29-09-26-08-26
 package v1
 
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // ProxySpec defines the desired state of Proxy
@@ -96,5 +100,8 @@ type ProxyList struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&Proxy{}, &ProxyList{})
+	SchemeBuilder.Register(func(s *runtime.Scheme) error {
+		s.AddKnownTypes(SchemeGroupVersion, &Proxy{}, &ProxyList{})
+		return nil
+	})
 }
