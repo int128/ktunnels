@@ -18,6 +18,8 @@ jobs:
       contents: write # Create and push the update branch
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.head_ref || github.ref }}
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
@@ -32,8 +34,9 @@ jobs:
       - run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-      - run: git fetch --depth=1 origin refs/heads/main:refs/heads/main
-      - run: kubebuilder alpha update --from-branch main --force
+      - run: kubebuilder alpha update --from-branch "$FROM_REF" --force
+        env:
+          FROM_REF: ${{ github.head_ref || github.ref }}
       - run: |
           git reset HEAD^
           git add .
@@ -42,6 +45,7 @@ jobs:
             .devcontainer \
             .golangci.* \
             go.* \
+            test \
             AGENTS.md \
             README.md
           git add .
