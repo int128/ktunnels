@@ -37,9 +37,9 @@ jobs:
       - run: |
           git reset HEAD^
           git checkout origin/main -- .github/workflows README.md go.*
-          git rm .golangci.*
-          git rm AGENTS.md
-          git rm -r .devcontainer
+          rm .golangci.*
+          rm AGENTS.md
+          rm -r .devcontainer
       - uses: int128/update-generated-files-action@1d6d8fac356eabbd925f4c3cab43d871bab249cd # v2.114.0
         with:
           dry-run: ${{ github.event_name == 'pull_request' }}
