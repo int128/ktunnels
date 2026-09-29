@@ -1,21 +1,7 @@
 package controller
 
 import (
-<<<<<<< HEAD
-	. "github.com/onsi/ginkgo/v2"
-)
-
-var _ = Describe("Proxy Controller", func() {
-	Context("When reconciling a resource", func() {
-
-		It("should successfully reconcile the resource", func() {
-
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
-		})
-=======
 	"context"
-	"k8s.io/utils/ptr"
 	"time"
 
 	ktunnelsv1 "github.com/int128/ktunnels/api/v1"
@@ -27,6 +13,7 @@ var _ = Describe("Proxy Controller", func() {
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -218,6 +205,5 @@ var _ = Describe("Proxy controller", func() {
 				g.Expect(deployment.Spec.Template.Spec.Containers[0].Resources).Should(Equal(resources))
 			}).Should(Succeed())
 		}, SpecTimeout(3*time.Second))
->>>>>>> tmp-original-29-09-26-08-37
 	})
 })
