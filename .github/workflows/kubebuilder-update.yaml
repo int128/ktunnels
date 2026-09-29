@@ -39,7 +39,8 @@ jobs:
             --from-branch main \
             --force \
             --restore-path .github/workflows
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: |
-          git diff
+          git reset HEAD^
+      - uses: int128/update-generated-files-action@1d6d8fac356eabbd925f4c3cab43d871bab249cd # v2.114.0
+        with:
+          dry-run: ${{ github.event_name == 'pull_request' }}
