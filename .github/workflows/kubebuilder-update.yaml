@@ -40,7 +40,7 @@ jobs:
       - run: |
           git reset HEAD^
           git add .
-          git restore HEAD -- \
+          git restore -s HEAD \
             .github/workflows \
             .devcontainer \
             .golangci.* \
