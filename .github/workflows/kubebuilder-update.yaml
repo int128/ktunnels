@@ -12,18 +12,14 @@ on:
 
 jobs:
   update:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04-arm
     timeout-minutes: 10
     permissions:
       contents: write # Create and push the update branch
-      issues: write # Create GitHub Issue with PR link
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
-      - run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          ref: ${{ github.head_ref || github.ref }}
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
@@ -35,32 +31,24 @@ jobs:
           sudo mv kubebuilder /usr/local/bin/
           kubebuilder version
 
-      # Run the Kubebuilder alpha update command.
-      # More info: https://kubebuilder.io/reference/commands/alpha_update
-      # Executes the update command with specified flags.
-      # --force: Completes the merge even if conflicts occur, leaving conflict markers.
-      # --push: Automatically pushes the resulting output branch to the 'origin' remote.
-      # --restore-path: Preserves specified paths (e.g., CI workflow files) when squashing.
-      # --open-gh-issue: Creates a GitHub Issue with a link for opening a PR for review.
-      #
-      # WARNING: This workflow does not use GitHub Models AI summary by default.
-      # To enable AI-generated summaries in GitHub issues, you need permissions to use GitHub Models.
-      # If you have the required permissions, re-run:
-      #   kubebuilder edit --plugins="autoupdate/v1-alpha" --use-gh-models
-      - if: github.event_name == 'pull_request'
-        run: |
-          git fetch origin refs/heads/main:refs/heads/main
-          kubebuilder alpha update \
-            --force \
-            --restore-path .github/workflows
+      - run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      - run: kubebuilder alpha update --from-branch "$FROM_REF" --force
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - if: github.event_name != 'pull_request'
-        run: |
-          kubebuilder alpha update \
-            --force \
-            --push \
-            --restore-path .github/workflows \
-            --open-gh-issue
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FROM_REF: ${{ github.head_ref || github.ref }}
+      - run: |
+          git reset HEAD^
+          git add .
+          git restore -s HEAD \
+            .github/workflows \
+            .devcontainer \
+            .golangci.* \
+            go.* \
+            test \
+            AGENTS.md \
+            README.md
+          git add .
+      - uses: int128/update-generated-files-action@1d6d8fac356eabbd925f4c3cab43d871bab249cd # v2.114.0
+        with:
+          dry-run: ${{ github.event_name == 'pull_request' }}
