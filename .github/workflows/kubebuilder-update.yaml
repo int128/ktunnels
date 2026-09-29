@@ -36,8 +36,14 @@ jobs:
       - run: kubebuilder alpha update --from-branch main --force
       - run: |
           git reset HEAD^
-          git restore --source=origin/main -- .github/workflows README.md go.*
-          rm -fr .golangci.* AGENTS.md .devcontainer
+          git add .
+          git restore --source=origin/main -- \
+            .github/workflows \
+            .devcontainer \
+            .golangci.* \
+            go.* \
+            AGENTS.md \
+            README.md
           git add .
       - uses: int128/update-generated-files-action@1d6d8fac356eabbd925f4c3cab43d871bab249cd # v2.114.0
         with:
