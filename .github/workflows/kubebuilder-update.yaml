@@ -33,7 +33,8 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
       - run: git fetch origin refs/heads/main:refs/heads/main
-      - run: kubebuilder alpha update --from-branch main
+      - run: kubebuilder alpha update --from-branch main --force
+      - run: git reset HEAD^
       - run: |
           git restore -s origin/main .github/workflows
           git restore -s origin/main test
