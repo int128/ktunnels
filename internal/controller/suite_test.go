@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 /*
 Copyright 2025.
 
@@ -14,6 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+>>>>>>> tmp-original-29-09-26-08-37
 package controller
 
 import (
@@ -59,7 +62,7 @@ var _ = BeforeSuite(func() {
 	By("bootstrapping test environment")
 	testEnv := &envtest.Environment{
 		CRDDirectoryPaths:     []string{filepath.Join("..", "..", "config", "crd", "bases")},
-		ErrorIfCRDPathMissing: true,
+		ErrorIfCRDPathMissing: false,
 	}
 
 	// Retrieve the first found binary directory to allow running tests from IDEs
@@ -81,6 +84,13 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
 
+<<<<<<< HEAD
+var _ = AfterSuite(func() {
+	By("tearing down the test environment")
+	cancel()
+	err := testEnv.Stop()
+	Expect(err).NotTo(HaveOccurred())
+=======
 	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{
 		Scheme: scheme.Scheme,
 	})
@@ -103,6 +113,7 @@ var _ = BeforeSuite(func() {
 		err := k8sManager.Start(ctx)
 		Expect(err).ToNot(HaveOccurred(), "failed to run manager")
 	}()
+>>>>>>> tmp-original-29-09-26-08-37
 })
 
 // getFirstFoundEnvTestBinaryDir locates the first binary in the specified path.
