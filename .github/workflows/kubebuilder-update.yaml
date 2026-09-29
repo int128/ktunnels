@@ -37,10 +37,10 @@ jobs:
       - run: git reset HEAD^
       - run: |
           git restore -s origin/main .github/workflows
-          git restore -s origin/main '.golangci.*'
+          rm .golangci.*
           git restore -s origin/main README.md
-          git restore -s origin/main AGENTS.md
-          git restore -s origin/main .devcontainer
+          rm AGENTS.md
+          rm -fr .devcontainer
           git restore -s origin/main go.*
       - uses: int128/update-generated-files-action@1d6d8fac356eabbd925f4c3cab43d871bab249cd # v2.114.0
         with:
