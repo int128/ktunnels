@@ -32,15 +32,16 @@ jobs:
       - run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      - run: git fetch origin refs/heads/main:refs/heads/main
+      - run: kubebuilder alpha update --from-branch main
       - run: |
-          git fetch origin refs/heads/main:refs/heads/main
-      - run: |
-          kubebuilder alpha update \
-            --from-branch main \
-            --force \
-            --restore-path .github/workflows
-      - run: |
-          git reset HEAD^
+          git restore -s origin/main .github/workflows
+          git restore -s origin/main test
+          git restore -s origin/main .golangci.*
+          git restore -s origin/main README.md
+          git restore -s origin/main AGENTS.md
+          git restore -s origin/main .devcontainer
+          git restore -s origin/main go.*
       - uses: int128/update-generated-files-action@1d6d8fac356eabbd925f4c3cab43d871bab249cd # v2.114.0
         with:
           dry-run: ${{ github.event_name == 'pull_request' }}
