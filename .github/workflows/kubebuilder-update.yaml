@@ -40,7 +40,7 @@ jobs:
       - run: |
           git reset HEAD^
           git add .
-          git restore "$FROM_REF" -- \
+          git restore HEAD -- \
             .github/workflows \
             .devcontainer \
             .golangci.* \
@@ -49,8 +49,6 @@ jobs:
             AGENTS.md \
             README.md
           git add .
-        env:
-          FROM_REF: ${{ github.head_ref || github.ref }}
       - uses: int128/update-generated-files-action@1d6d8fac356eabbd925f4c3cab43d871bab249cd # v2.114.0
         with:
           dry-run: ${{ github.event_name == 'pull_request' }}
