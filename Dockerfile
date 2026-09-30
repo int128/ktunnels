@@ -1,5 +1,9 @@
 # Build the manager binary
-FROM --platform=$BUILDPLATFORM golang:1.26.6@sha256:0d1d3a794be25f809dd2cb3160d8c73276c4056a9f8242a138e908ddeee7b6b6 AS builder
+# Override BASE_IMAGE to build from another registry, e.g. docker.io/library/golang:1.26
+ARG BASE_IMAGE=golang:1.26
+FROM --platform=$BUILDPLATFORM ${BASE_IMAGE} AS builder
+ARG TARGETOS
+ARG TARGETARCH
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
@@ -11,9 +15,6 @@ RUN go mod download
 
 # Copy the Go source (relies on .dockerignore to filter)
 COPY . .
-
-ARG TARGETOS
-ARG TARGETARCH
 
 # Build
 # the GOARCH has no default value to allow the binary to be built according to the host where the command
