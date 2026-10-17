@@ -89,8 +89,8 @@ jobs:
       - run: cat "${RUNNER_TEMP}/${GITHUB_REPOSITORY##*/}.yaml"
       - id: create-draft-release
         uses: int128/create-draft-release-action@0cdd1b9d8001d6b3e137a4c01f5d621b699c3b24 # v0.8.0
-        # with:
-        #   dry-run: ${{ github.event_name == 'pull_request' }}
+        with:
+          dry-run: ${{ github.event_name == 'pull_request' }}
       - if: steps.create-draft-release.outputs.release-name
         run: gh release upload "$RELEASE_NAME" "${RUNNER_TEMP}/${GITHUB_REPOSITORY##*/}.yaml"
         env:
