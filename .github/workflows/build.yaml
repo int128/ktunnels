@@ -78,24 +78,45 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: write
+      contents: read
+      packages: write # oras
+      id-token: write # cosign
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - run: kustomize edit set image controller="$controller_image"
-        working-directory: config/manager
-        env:
-          controller_image: ${{ needs.container.outputs.image-uri }}
-      - run: kustomize build config/default > "${RUNNER_TEMP}/${GITHUB_REPOSITORY##*/}.yaml"
-      - run: cat "${RUNNER_TEMP}/${GITHUB_REPOSITORY##*/}.yaml"
-      - id: create-draft-release
-        uses: int128/create-draft-release-action@0cdd1b9d8001d6b3e137a4c01f5d621b699c3b24 # v0.8.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          dry-run: ${{ github.event_name == 'pull_request' }}
-      - if: steps.create-draft-release.outputs.release-name
-        run: gh release upload "$RELEASE_NAME" "${RUNNER_TEMP}/${GITHUB_REPOSITORY##*/}.yaml"
+          go-version-file: go.mod
+          cache: false
+      - run: make build-installer
         env:
-          RELEASE_NAME: ${{ steps.create-draft-release.outputs.release-name }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMG: ${{ needs.container.outputs.image-uri }}
+      - run: cat dist/install.yaml
+
+      - uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        id: metadata
+        with:
+          images: ghcr.io/${{ github.repository }}/manifests
+          flavor: latest=false
+      - uses: oras-project/setup-oras@005458ad77f1c8facd38a094e4af2e69e5607ff4 # v2.0.2
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      - id: push
+        shell: bash
+        run: |
+          {
+            echo "result<<EOF"
+            oras push --format=json "$IMAGE_TAG" dist/install.yaml
+            echo "EOF"
+          } | tee -a "$GITHUB_OUTPUT"
+        env:
+          IMAGE_TAG: ${{ steps.metadata.outputs.tags }}
+      - run: cosign sign --yes "$IMAGE_URI"
+        env:
+          IMAGE_URI: ${{ steps.metadata.outputs.tags }}@${{ fromJson(steps.push.outputs.result).digest }}
 
   e2e-test:
     runs-on: ubuntu-latest
