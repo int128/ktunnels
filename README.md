@@ -19,10 +19,10 @@ You no longer maintain your bastion servers.
 
 ### For administrator
 
-Deploy the controller.
+Deploy the manifest from [ghcr.io/int128/ktunnels/manifests](https://github.com/int128/ktunnels/pkgs/container/ktunnels%2Fmanifests).
 
 ```sh
-kubectl apply -f https://github.com/int128/ktunnels/releases/download/v0.9.2/ktunnels.yaml
+oras pull ghcr.io/int128/ktunnels/manifests:main
 ```
 
 ### For user
