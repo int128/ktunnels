@@ -18,6 +18,10 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           path: head
+      - uses: aquaproj/aqua-installer@ea518c135a02fc11ff8024364510c181a5c6b342 # v4.0.3
+        with:
+          aqua_version: v2.43.1
+          working_directory: head
       - uses: int128/kustomize-action@4fbeca93d7072507f0c6d4529025d17a5d209551 # v1.195.0
         id: kustomize-head
         with:
