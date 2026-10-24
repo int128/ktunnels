@@ -13,4 +13,4 @@ registries:
 packages:
 - name: kubernetes-sigs/kustomize@kustomize/v5.7.1
 - name: oras-project/oras@v1.3.4
-- name: sigstore/cosign@v3.0.2
+- name: sigstore/cosign@v3.1.3
