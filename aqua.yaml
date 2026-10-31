@@ -12,5 +12,5 @@ registries:
   ref: v4.576.0  # renovate: depName=aquaproj/aqua-registry
 packages:
 - name: kubernetes-sigs/kustomize@kustomize/v5.8.3
-- name: oras-project/oras@v1.3.5
+- name: oras-project/oras@v1.3.6
 - name: sigstore/cosign@v3.1.4
