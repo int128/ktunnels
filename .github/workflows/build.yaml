@@ -135,10 +135,9 @@ jobs:
       - run: helm registry login ghcr.io -u "$GITHUB_ACTOR" --password-stdin <<< "$GITHUB_TOKEN"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: make helm-publish
+      - run: bash hack/release-helm-chart.sh
         env:
           IMG: ${{ needs.container.outputs.image-uri }}
-          HELM_CHART_VERSION: ${{ case(github.ref_type == 'tag', github.ref_name, 'v0.0.0') }}
 
   e2e-test:
     runs-on: ubuntu-latest
