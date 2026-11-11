@@ -73,50 +73,6 @@ jobs:
           tags: ${{ steps.metadata.outputs.tags }}
           digest: ${{ steps.build.outputs.digest }}
 
-  manifest:
-    needs: container
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      packages: write # oras
-      id-token: write # cosign
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: aquaproj/aqua-installer@611554c6f0137ba41c8dd15aca8bee82504ea461 # v4.1.1
-        with:
-          aqua_version: v2.65.2
-      - run: kustomize edit set image controller="$controller_image"
-        working-directory: config/manager
-        env:
-          controller_image: ${{ needs.container.outputs.image-uri }}
-      - run: kustomize build config/default > install.yaml
-      - run: cat install.yaml
-
-      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
-        id: metadata
-        with:
-          images: ghcr.io/${{ github.repository }}/manifests
-          flavor: latest=false
-      - id: push
-        shell: bash
-        run: |
-          {
-            echo "result<<EOF"
-            oras push --format=json "$IMAGE_TAG" install.yaml
-            echo "EOF"
-          } | tee -a "$GITHUB_OUTPUT"
-        env:
-          IMAGE_TAG: ${{ steps.metadata.outputs.tags }}
-      - run: cosign sign --yes "$IMAGE_URI"
-        env:
-          IMAGE_URI: ${{ steps.metadata.outputs.tags }}@${{ fromJson(steps.push.outputs.result).digest }}
-
   e2e-test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
