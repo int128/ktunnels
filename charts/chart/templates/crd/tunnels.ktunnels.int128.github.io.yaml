@@ -1,0 +1,100 @@
+{{- if .Values.crd.enabled }}
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    {{- if .Values.crd.keep }}
+    "helm.sh/resource-policy": keep
+    {{- end }}
+    controller-gen.kubebuilder.io/version: v0.22.0
+  name: tunnels.ktunnels.int128.github.io
+spec:
+  group: ktunnels.int128.github.io
+  names:
+    kind: Tunnel
+    listKind: TunnelList
+    plural: tunnels
+    singular: tunnel
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.ready
+      name: Ready
+      type: string
+    - jsonPath: .spec.host
+      name: Host
+      type: string
+    - jsonPath: .spec.port
+      name: Port
+      type: integer
+    - jsonPath: .spec.proxy.name
+      name: Proxy
+      type: string
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: Tunnel is the Schema for the tunnels API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: spec defines the desired state of Tunnel
+            properties:
+              host:
+                description: Destination hostname of this tunnel.
+                type: string
+              port:
+                description: Destination port of this tunnel.
+                format: int32
+                type: integer
+              proxy:
+                description: Proxy resource to register.
+                properties:
+                  name:
+                    default: ""
+                    description: |-
+                      Name of the referent.
+                      This field is effectively required, but due to backwards compatibility is
+                      allowed to be empty. Instances of this type with an empty value here are
+                      almost certainly wrong.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+            type: object
+          status:
+            description: status defines the observed state of Tunnel
+            properties:
+              ready:
+                description: True if the service is created.
+                type: boolean
+              transitPort:
+                description: |-
+                  Transit port of the proxy.
+                  This value is automatically set by proxy controller. Do not set this manually.
+                format: int32
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+{{- end }}

@@ -259,3 +259,21 @@ endef
 define gomodver
 $(shell go list -m -f '{{if .Replace}}{{.Replace.Version}}{{else}}{{.Version}}{{end}}' $(1) 2>/dev/null)
 endef
+
+##@ Helm Deployment
+
+HELM_CHART_NAME := ktunnels
+HELM_CHART_VERSION = $(patsubst v%,%,$(HELM_CHART_VERSION))
+
+.PHONY: helm-generate
+helm-generate:
+	kustomize build config/default > install.yaml
+	kubebuilder edit --plugins=helm/v2-alpha --output-dir=charts --manifests=install.yaml
+	rm install.yaml
+	rm .github/workflows/test-chart.yml
+
+.PHONY: helm-publish
+helm-publish:
+	yq -i '.manager.image.repository = env(IMG)' charts/chart/values.yaml
+	helm package charts/chart --version $(HELM_CHART_VERSION) --app-version $(HELM_CHART_VERSION)
+	helm push $(HELM_CHART_NAME)-$(HELM_CHART_VERSION).tgz oci://ghcr.io/$(GITHUB_REPOSITORY)/charts

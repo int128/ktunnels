@@ -1,0 +1,66 @@
+apiVersion: rbac.authorization.k8s.io/v1
+{{- if .Values.rbac.namespaced }}
+kind: Role
+{{- else }}
+kind: ClusterRole
+{{- end }}
+metadata:
+{{- if .Values.rbac.namespaced }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}
+  name: {{ include "ktunnels.resourceName" (dict "suffix" "manager-role" "context" $) }}
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - services
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ktunnels.int128.github.io
+  resources:
+  - proxies
+  - tunnels
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ktunnels.int128.github.io
+  resources:
+  - proxies/finalizers
+  - tunnels/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - ktunnels.int128.github.io
+  resources:
+  - proxies/status
+  - tunnels/status
+  verbs:
+  - get
+  - patch
+  - update
