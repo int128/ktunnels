@@ -263,7 +263,7 @@ endef
 ##@ Helm Deployment
 
 HELM_CHART_NAME := ktunnels
-HELM_CHART_VERSION = $(patsubst v%,%,$(HELM_CHART_VERSION))
+HELM_CHART_VERSION := $(patsubst v%,%,$(HELM_CHART_VERSION))
 
 .PHONY: helm-generate
 helm-generate:
