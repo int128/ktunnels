@@ -19,11 +19,8 @@ You no longer maintain your bastion servers.
 
 ### For administrator
 
-Deploy the manifest from [ghcr.io/int128/ktunnels/manifests](https://github.com/int128/ktunnels/pkgs/container/ktunnels%2Fmanifests).
-
-```sh
-oras pull ghcr.io/int128/ktunnels/manifests:main
-```
+Deploy the Helm chart from [ghcr.io/int128/ktunnels/charts/ktunnels](https://github.com/int128/ktunnels/pkgs/container/ktunnels%2Fcharts%2Fktunnels).
+See [values.yaml](charts/chart/values.yaml) of the chart.
 
 ### For user
 
