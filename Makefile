@@ -259,3 +259,12 @@ endef
 define gomodver
 $(shell go list -m -f '{{if .Replace}}{{.Replace.Version}}{{else}}{{.Version}}{{end}}' $(1) 2>/dev/null)
 endef
+
+##@ Helm Deployment
+
+.PHONY: helm-generate
+helm-generate:
+	kustomize build config/default > install.yaml
+	kubebuilder edit --plugins=helm/v2-alpha --output-dir=charts --manifests=install.yaml
+	rm install.yaml
+	rm .github/workflows/test-chart.yml
