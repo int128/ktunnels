@@ -5,7 +5,12 @@ set -eux -o pipefail
 
 chart_name=ktunnels
 chart_registry="oci://ghcr.io/$GITHUB_REPOSITORY/charts"
-chart_version="${GITHUB_REF_NAME#v}"
+
+if [[ $GITHUB_REF_TYPE = tag ]]; then
+  chart_version="${GITHUB_REF_NAME#v}"
+else
+  chart_version=0.0.0
+fi
 
 # Set the default image
 yq -i '.manager.image.repository = env(IMG)' charts/chart/values.yaml
